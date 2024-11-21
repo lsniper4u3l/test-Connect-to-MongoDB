@@ -11,11 +11,11 @@ export default function Home() {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       const tg = window.Telegram.WebApp;
       tg.ready();
-  
+
       const initData = tg.initData || '';
       const initDataUnsafe = tg.initDataUnsafe || {};
-  
-      if (initDataUnsafe?.user) {
+
+      if (initDataUnsafe.user) {
         fetch('/api/user', {
           method: 'POST',
           headers: {
@@ -41,7 +41,6 @@ export default function Home() {
       setError('This app should be opened in Telegram');
     }
   }, []);
-  
 
   const handleIncreasePoints = async () => {
     if (!user) return;
@@ -62,7 +61,7 @@ export default function Home() {
       } else {
         setError('Failed to increase points');
       }
-    } catch (err) {
+    } catch {
       setError('An error occurred while increasing points');
     }
   };
