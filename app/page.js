@@ -11,11 +11,11 @@ export default function Home() {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       const tg = window.Telegram.WebApp;
       tg.ready();
-
+  
       const initData = tg.initData || '';
       const initDataUnsafe = tg.initDataUnsafe || {};
-
-      if (initDataUnsafe.user) {
+  
+      if (initDataUnsafe?.user) {
         fetch('/api/user', {
           method: 'POST',
           headers: {
@@ -31,7 +31,7 @@ export default function Home() {
               setUser(data);
             }
           })
-          .catch((err) => {
+          .catch(() => {
             setError('Failed to fetch user data');
           });
       } else {
@@ -41,6 +41,7 @@ export default function Home() {
       setError('This app should be opened in Telegram');
     }
   }, []);
+  
 
   const handleIncreasePoints = async () => {
     if (!user) return;
