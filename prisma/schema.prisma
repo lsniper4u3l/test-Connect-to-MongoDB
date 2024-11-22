@@ -17,7 +17,7 @@ model User {
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 
-  items     Inventory[] @relation("UserItems")
+  items     Inventory[] @relation("UserToInventory") 
 }
 
 model Inventory {
@@ -29,6 +29,6 @@ model Inventory {
   upgrade   Int      @default(0)
   power     Int
   userId    String   @db.ObjectId
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation("UserToInventory", fields: [userId], references: [id]) 
   createdAt DateTime @default(now())
 }
