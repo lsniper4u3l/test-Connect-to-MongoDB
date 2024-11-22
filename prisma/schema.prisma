@@ -22,12 +22,12 @@ model User {
   items     UserItem[] 
 }
 model UserItem {
-  id        String   @id @default(auto()) @map("_id")
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String
   image     String
   category  String
   grade     String
   power     Int
-  userId    String
+  userId    String  @db.ObjectId
   user      User     @relation(fields: [userId], references: [id])
 }
