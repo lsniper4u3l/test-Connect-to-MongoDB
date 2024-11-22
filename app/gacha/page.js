@@ -1,5 +1,3 @@
-'use client';
-
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTelegramAuth } from '@/hooks/useTelegramAuth';
@@ -10,46 +8,46 @@ export default function Gacha() {
   const [debugLog, setDebugLog] = useState([]); // Debug Log
   const { user, error } = useTelegramAuth();
 
-  // ฟังก์ชันดึงช่องเก็บของจาก API
-  useEffect(() => {
-    const fetchInventory = async () => {
-      try {
-        if (!user?.telegramId) return;
+  // ฟังก์ชันดึงข้อมูลช่องเก็บของ
+  const fetchInventory = async () => {
+    try {
+      setDebugLog((prev) => [...prev, `กำลังดึงข้อมูลช่องเก็บของสำหรับผู้ใช้: ${user.telegramId}`]);
 
-        setDebugLog((prev) => [...prev, 'กำลังโหลดช่องเก็บของ...']);
+      const response = await fetch('/api/inventory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: user.telegramId }), // ส่ง userId (telegramId) ไปยัง API
+      });
 
-        const response = await fetch('/api/inventory', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: user.telegramId }), // ส่ง userId ไปยัง API
-        });
+      const data = await response.json();
 
-        const data = await response.json();
-
-        if (data.error) {
-          setDebugLog((prev) => [...prev, `Error fetching inventory: ${data.error}`]);
-          return;
-        }
-
-        setInventory(data); // ตั้งค่า inventory จากฐานข้อมูล
-        setDebugLog((prev) => [...prev, 'ช่องเก็บของโหลดสำเร็จ']);
-      } catch (error) {
-        setDebugLog((prev) => [...prev, `Fetch error: ${error.message}`]);
+      if (data.error) {
+        setDebugLog((prev) => [...prev, `Error fetching inventory: ${data.error}`]);
+        return;
       }
-    };
 
-    fetchInventory();
-  }, [user]); // ทำงานเมื่อ `user` พร้อมใช้งาน
+      setInventory(data); // ตั้งค่า inventory
+      setDebugLog((prev) => [...prev, 'ดึงข้อมูลช่องเก็บของสำเร็จ']);
+    } catch (error) {
+      setDebugLog((prev) => [...prev, `Fetch error: ${error.message}`]);
+    }
+  };
 
-  // ฟังก์ชันสุ่มไอเทม
+  // ดึงข้อมูลช่องเก็บของเมื่อโหลดหน้า
+  useEffect(() => {
+    if (user) {
+      fetchInventory();
+    }
+  }, [user]);
+
   const handleGacha = async (category) => {
     try {
-      setDebugLog((prev) => [...prev, `เริ่มสุ่มไอเทมประเภท: ${category}`]);
+      setDebugLog((prev) => [...prev, `เริ่มสุ่มไอเทมประเภท: ${category}`]); // เพิ่ม Debug Log
 
       const response = await fetch('/api/gacha', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: user.telegramId, category }), // ส่ง userId ของผู้ใช้งาน
+        body: JSON.stringify({ id: user.telegramId, category }), // ใส่ userId ของผู้ใช้งาน
       });
 
       const responseData = await response.json();
@@ -60,11 +58,11 @@ export default function Gacha() {
       }
 
       const newItem = responseData.item;
-      setDebugLog((prev) => [...prev, ...responseData.debugLog]);
+      setDebugLog((prev) => [...prev, ...responseData.debugLog]); // เพิ่ม Debug Log จาก API
       setInventory((prev) => [...prev, newItem]); // เพิ่มไอเทมเข้าสู่ช่องเก็บของ
       setResult(newItem); // แสดงไอเทมที่สุ่มได้
     } catch (error) {
-      setDebugLog((prev) => [...prev, `เกิดข้อผิดพลาดในการเชื่อมต่อ: ${error.message}`]);
+      setDebugLog((prev) => [...prev, `เกิดข้อผิดพลาดในการเชื่อมต่อ: ${error.message}`]); // Debug ข้อผิดพลาด
     }
   };
 
