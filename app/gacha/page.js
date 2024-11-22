@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+'use client';
+
+import { useEffect , useState } from 'react';
 import Link from 'next/link';
 import { useTelegramAuth } from '@/hooks/useTelegramAuth';
 
@@ -7,38 +9,6 @@ export default function Gacha() {
   const [inventory, setInventory] = useState([]); // ช่องเก็บของ
   const [debugLog, setDebugLog] = useState([]); // Debug Log
   const { user, error } = useTelegramAuth();
-
-  // ฟังก์ชันดึงข้อมูลช่องเก็บของ
-  const fetchInventory = async () => {
-    try {
-      setDebugLog((prev) => [...prev, `กำลังดึงข้อมูลช่องเก็บของสำหรับผู้ใช้: ${user.telegramId}`]);
-
-      const response = await fetch('/api/inventory', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: user.telegramId }), // ส่ง userId (telegramId) ไปยัง API
-      });
-
-      const data = await response.json();
-
-      if (data.error) {
-        setDebugLog((prev) => [...prev, `Error fetching inventory: ${data.error}`]);
-        return;
-      }
-
-      setInventory(data); // ตั้งค่า inventory
-      setDebugLog((prev) => [...prev, 'ดึงข้อมูลช่องเก็บของสำเร็จ']);
-    } catch (error) {
-      setDebugLog((prev) => [...prev, `Fetch error: ${error.message}`]);
-    }
-  };
-
-  // ดึงข้อมูลช่องเก็บของเมื่อโหลดหน้า
-  useEffect(() => {
-    if (user) {
-      fetchInventory();
-    }
-  }, [user]);
 
   const handleGacha = async (category) => {
     try {
@@ -65,6 +35,39 @@ export default function Gacha() {
       setDebugLog((prev) => [...prev, `เกิดข้อผิดพลาดในการเชื่อมต่อ: ${error.message}`]); // Debug ข้อผิดพลาด
     }
   };
+
+
+  // ดึงข้อมูล inventory เมื่อผู้ใช้เข้าสู่ระบบ
+  useEffect(() => {
+    const fetchInventory = async () => {
+      try {
+        if (!user?.telegramId) {
+          setDebugLog((prev) => [...prev, 'User ID is not available']);
+          return;
+        }
+
+        const response = await fetch('/api/inventory', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: user.telegramId }),
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+          setDebugLog((prev) => [...prev, `Error fetching inventory: ${data.error}`]);
+          return;
+        }
+
+        setInventory(data); // ตั้งค่า inventory
+        setDebugLog((prev) => [...prev, 'Inventory loaded successfully']);
+      } catch (error) {
+        setDebugLog((prev) => [...prev, `Fetch error: ${error.message}`]);
+      }
+    };
+
+    fetchInventory();
+  }, [user?.telegramId]);
 
   if (error) return <div className="container mx-auto p-4 text-red-500">{error}</div>;
   if (!user) return <div className="container mx-auto p-4">Loading...</div>;
