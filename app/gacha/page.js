@@ -18,35 +18,30 @@ export default function Gacha() {
   useEffect(() => {
     const fetchInventory = async () => {
       try {
-        if (!user?.telegramId) {
-          setDebugLog((prev) => [...prev, 'No user ID available']);
-          return;
-        }
-  
+        if (!user?.telegramId) return;
+
         const response = await fetch('/api/inventory', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: user.telegramId }),
+          body: JSON.stringify({ id: user.telegramId }), // ส่ง userId ผ่าน body
         });
-  
+
         const data = await response.json();
-  
+
         if (data.error) {
           setDebugLog((prev) => [...prev, `Error fetching inventory: ${data.error}`]);
-          setInventory([]); // ตั้งค่า inventory เป็นว่าง
           return;
         }
-  
+
         setInventory(data); // ตั้งค่า inventory
         setDebugLog((prev) => [...prev, 'Inventory loaded successfully']);
       } catch (error) {
         setDebugLog((prev) => [...prev, `Fetch error: ${error.message}`]);
       }
     };
-  
+
     fetchInventory();
   }, [user?.telegramId]);
-  
 
   // ฟังก์ชันสำหรับสุ่มไอเทม
   const handleGacha = async (category) => {
