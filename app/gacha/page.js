@@ -1,49 +1,85 @@
-// app/gacha/page.js
-
 'use client';
 
-import Link from 'next/link';
-import { useTelegramAuth } from '@/hooks/useTelegramAuth';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
-export default function Gacha() {
-  const { user, error } = useTelegramAuth();
-  const [result, setResult] = useState(null);
+export default function GachaPage() {
+  const [user, setUser] = useState(null);
   const [inventory, setInventory] = useState([]);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
 
+  // ดึงข้อมูลผู้ใช้
   useEffect(() => {
-    if (user) {
-      fetch(`/api/user-items?telegramId=${user.telegramId}`)
-        .then((res) => res.json())
-        .then((data) => setInventory(data.items))
-        .catch(() => console.error('Failed to fetch inventory'));
+    async function fetchUser() {
+      try {
+        const res = await fetch('/api/user'); // สมมติว่ามี endpoint สำหรับดึงข้อมูลผู้ใช้
+        const data = await res.json();
+        if (data.error) {
+          setError(data.error);
+        } else {
+          setUser(data.user);
+          fetchInventory(data.user.id); // ดึง inventory ของผู้ใช้
+        }
+      } catch (err) {
+        setError('Failed to fetch user data');
+      }
     }
-  }, [user]);
 
-  const handleGacha = async () => {
+    fetchUser();
+  }, []);
+
+  // ดึงข้อมูล inventory ของผู้ใช้
+  async function fetchInventory(userId) {
+    try {
+      const res = await fetch(`/api/user-items?userId=${userId}`);
+      const data = await res.json();
+      if (data.success) {
+        setInventory(data.items);
+      } else {
+        setError(data.error || 'Failed to fetch inventory');
+      }
+    } catch {
+      setError('Failed to fetch inventory');
+    }
+  }
+
+  // ฟังก์ชันสำหรับสุ่มกาชา
+  async function handleGacha() {
     try {
       const res = await fetch('/api/gacha', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ telegramId: user.telegramId }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ telegramId: user.telegramId }), // ใช้ Telegram ID
       });
       const data = await res.json();
+
       if (data.success) {
-        setResult(data.item);
-        setInventory((prev) => [...prev, data.item]);
+        setResult(data.item); // แสดงผลไอเท็มที่สุ่มได้
+        setInventory((prev) => [...prev, data.item]); // อัปเดต inventory
       } else {
-        console.error(data.error);
+        setError(data.error || 'Failed to perform gacha');
       }
     } catch {
-      console.error('Error occurred while performing gacha');
+      setError('Error occurred while performing gacha');
     }
-  };
+  }
 
-  if (error) return <div className="container mx-auto p-4 text-red-500">{error}</div>;
-  if (!user) return <div className="container mx-auto p-4">Loading...</div>;
+  // ถ้ามีข้อผิดพลาด แสดงข้อความ
+  if (error) {
+    return <div className="container mx-auto p-4 text-red-500">{error}</div>;
+  }
+
+  // ถ้ายังไม่มีข้อมูลผู้ใช้ แสดงข้อความ Loading
+  if (!user) {
+    return <div className="container mx-auto p-4">Loading...</div>;
+  }
 
   return (
     <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Gacha Page</h1>
       <Link href="/">
         <a className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
           ย้อนกลับหน้าแรก
@@ -56,17 +92,23 @@ export default function Gacha() {
         สุ่มกาชา
       </button>
       {result && (
-        <div className="mt-4 p-2 bg-green-100 text-green-700 rounded">
-          คุณได้รับ: {result.name} (Grade: {result.grade})
+        <div className="mt-4 p-4 bg-green-100 rounded">
+          <h3 className="font-bold">คุณได้รับ:</h3>
+          <p>ชื่อไอเท็ม: {result.name}</p>
+          <p>ประเภท: {result.category}</p>
+          <p>เกรด: {result.grade}</p>
+          <p>พลัง: {result.power}</p>
         </div>
       )}
-      <div className="mt-4">
+      <div className="mt-8">
         <h2 className="text-xl font-bold">กล่องเก็บของ</h2>
-        <ul className="mt-2">
+        <ul className="mt-4 grid grid-cols-2 gap-4">
           {inventory.map((item) => (
-            <li key={item.id} className="border p-2 rounded mb-2">
-              <img src={item.image} alt={item.name} className="w-12 h-12 inline-block mr-4" />
-              {item.name} (Grade: {item.grade}, Power: {item.power})
+            <li key={item.id} className="border p-4 rounded bg-gray-100">
+              <h3 className="font-bold">{item.name}</h3>
+              <p>ประเภท: {item.category}</p>
+              <p>เกรด: {item.grade}</p>
+              <p>พลัง: {item.power}</p>
             </li>
           ))}
         </ul>
