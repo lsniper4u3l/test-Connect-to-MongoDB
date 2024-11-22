@@ -26,27 +26,31 @@ export default function Gacha({ userId }) {
   const [result, setResult] = useState(null);
   const [inventory, setInventory] = useState([]);
   const [items, setItems] = useState(null);
+  const [error, setError] = useState(null); // เก็บข้อความข้อผิดพลาด
 
   useEffect(() => {
     // ดึงข้อมูลไอเทมทั้งหมด
-    import('@/Data/DataItemGame').then((data) => {
-      if (data && data.default) {
-        setItems(data.default);
-      } else {
-        console.error('Failed to load items.');
-      }
-    });
+    import('@/Data/DataItemGame')
+      .then((data) => {
+        if (data && data.default) {
+          setItems(data.default);
+        } else {
+          setError('ไม่สามารถโหลดข้อมูลไอเทมได้');
+        }
+      })
+      .catch(() => setError('เกิดข้อผิดพลาดในการโหลดข้อมูลไอเทม'));
 
     // ดึงข้อมูลช่องเก็บของ
     fetch(`/api/inventory?userId=${userId}`)
       .then((res) => res.json())
       .then((data) => setInventory(data))
-      .catch((err) => console.error('Error fetching inventory:', err));
+      .catch(() => setError('เกิดข้อผิดพลาดในการดึงข้อมูลช่องเก็บของ'));
   }, [userId]);
 
   const handleGacha = (category) => {
+    setError(null); // รีเซ็ตข้อผิดพลาดก่อนเริ่มการสุ่ม
     if (!items || !items[category]) {
-      console.error('Items not loaded or category not found.');
+      setError('ข้อมูลไอเทมหรือประเภทไอเทมไม่ถูกต้อง');
       return;
     }
 
@@ -60,7 +64,7 @@ export default function Gacha({ userId }) {
       })
         .then((res) => {
           if (!res.ok) {
-            throw new Error('Failed to save item');
+            throw new Error('ไม่สามารถบันทึกไอเทมได้');
           }
           return res.json();
         })
@@ -68,7 +72,7 @@ export default function Gacha({ userId }) {
           setResult(data);
           setInventory((prev) => [...prev, data]);
         })
-        .catch((err) => console.error('Error saving item:', err));
+        .catch(() => setError('เกิดข้อผิดพลาดในการบันทึกไอเทม'));
     } else {
       setResult({ name: 'ไม่มีไอเทมที่ตรงเกรด', image: '', grade: 'N/A', power: 0 });
     }
@@ -78,6 +82,14 @@ export default function Gacha({ userId }) {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6 text-center">Gacha Game</h1>
 
+      {/* แสดงข้อผิดพลาด */}
+      {error && (
+        <div className="bg-red-100 text-red-700 border border-red-400 rounded p-3 mb-4">
+          <p>{error}</p>
+        </div>
+      )}
+
+      {/* ปุ่มสุ่ม */}
       <div className="flex flex-wrap justify-center gap-4 mb-8">
         {items &&
           Object.keys(items).map((category) => (
@@ -91,6 +103,7 @@ export default function Gacha({ userId }) {
           ))}
       </div>
 
+      {/* ผลการสุ่ม */}
       {result && (
         <div className="text-center">
           <h2 className="text-lg font-semibold mb-4">ผลการสุ่ม:</h2>
@@ -103,6 +116,7 @@ export default function Gacha({ userId }) {
         </div>
       )}
 
+      {/* ช่องเก็บของ */}
       <div className="mt-10">
         <h2 className="text-xl font-bold mb-4 text-center">ช่องเก็บของ</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -125,6 +139,7 @@ export default function Gacha({ userId }) {
         </div>
       </div>
 
+      {/* ปุ่มกลับหน้าหลัก */}
       <div className="mt-8 text-center">
         <Link href="/">
           <a className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded">
