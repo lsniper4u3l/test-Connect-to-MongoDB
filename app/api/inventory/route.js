@@ -3,15 +3,17 @@
 const { NextResponse } = require('next/server');
 const { prisma } = require('@/lib/prisma');
 
-async function GET(req) {
+async function POST(req) {
   try {
-    const userId = req.headers.get('userId'); // ใช้ User ID จาก Header
+    // รับข้อมูล userId จาก body
+    const userData = await req.json();
+    const userId = userData.id; // รับ userId จาก body
 
     if (!userId) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    // ดึงรายการไอเทมจาก Inventory
+    // ดึงข้อมูล inventory ที่เชื่อมโยงกับ userId
     const inventory = await prisma.inventory.findMany({
       where: { userId },
       select: {
@@ -32,4 +34,4 @@ async function GET(req) {
   }
 }
 
-module.exports = { GET };
+module.exports = { POST };
