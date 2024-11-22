@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import items from '@/Data/DataItemGame';
 
+// ฟังก์ชันสุ่มเกรด
 function getRandomGrade() {
   const random = Math.random() * 100;
   if (random <= 0.0001) return 'S';
@@ -15,7 +15,8 @@ function getRandomGrade() {
   return 'F';
 }
 
-function getRandomItem(category) {
+// ฟังก์ชันสุ่มไอเทม
+function getRandomItem(category, items) {
   const grade = getRandomGrade();
   const filteredItems = items[category].filter((item) => item.grade === grade);
   return filteredItems.length > 0
@@ -23,43 +24,44 @@ function getRandomItem(category) {
     : null;
 }
 
-export default function Gacha() {
+export default function Gacha({ userId }) {
   const [result, setResult] = useState(null);
   const [inventory, setInventory] = useState([]);
-  const userId = 'user-unique-id'; // ตัวอย่าง userId
+  const [items, setItems] = useState(null); // ไอเทมทั้งหมด
 
   useEffect(() => {
-    // ดึงข้อมูลไอเทมจาก API
+    // ดึงข้อมูลไอเทมทั้งหมด
+    import('@/Data/DataItemGame').then((data) => setItems(data.default));
+
+    // ดึงไอเทมในช่องเก็บของจาก API
     fetch(`/api/inventory?userId=${userId}`)
       .then((res) => res.json())
       .then((data) => setInventory(data))
-      .catch((error) => console.error('Error fetching inventory:', error));
-  }, []);
+      .catch((err) => console.error('Error fetching inventory:', err));
+  }, [userId]);
 
-  const handleGacha = async (category) => {
-    const item = getRandomItem(category);
+  const handleGacha = (category) => {
+    if (!items) return;
+
+    // สุ่มไอเทม
+    const item = getRandomItem(category, items);
 
     if (item) {
-      // ส่งไอเทมไปยัง API เพื่อบันทึกในฐานข้อมูล
-      try {
-        const res = await fetch('/api/gacha', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ userId, item }),
-        });
-
-        const savedItem = await res.json();
-        if (!savedItem.error) {
-          setInventory((prev) => [...prev, savedItem]);
-        }
-      } catch (error) {
-        console.error('Error saving gacha item:', error);
-      }
+      // บันทึกไอเทมลงฐานข้อมูล
+      fetch('/api/gacha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, item }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setResult(data); // แสดงผลลัพธ์การสุ่ม
+          setInventory((prev) => [...prev, data]); // เพิ่มไอเทมในช่องเก็บของ
+        })
+        .catch((err) => console.error('Error saving item:', err));
+    } else {
+      setResult({ name: 'ไม่มีไอเทมที่ตรงเกรด', image: '', grade: 'N/A', power: 0 });
     }
-
-    setResult(item || { name: 'ไม่มีไอเทมที่ตรงเกรด', image: '', grade: 'N/A', power: 0 });
   };
 
   return (
@@ -68,15 +70,16 @@ export default function Gacha() {
 
       {/* ปุ่มสุ่ม */}
       <div className="flex flex-wrap justify-center gap-4 mb-8">
-        {Object.keys(items).map((category) => (
-          <button
-            key={category}
-            className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
-            onClick={() => handleGacha(category)}
-          >
-            สุ่ม {category}
-          </button>
-        ))}
+        {items &&
+          Object.keys(items).map((category) => (
+            <button
+              key={category}
+              className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
+              onClick={() => handleGacha(category)}
+            >
+              สุ่ม {category}
+            </button>
+          ))}
       </div>
 
       {/* ผลการสุ่ม */}
@@ -84,11 +87,7 @@ export default function Gacha() {
         <div className="text-center">
           <h2 className="text-lg font-semibold mb-4">ผลการสุ่ม:</h2>
           {result.image && (
-            <img
-              src={result.image}
-              alt={result.name}
-              className="w-32 h-32 mx-auto mb-4"
-            />
+            <img src={result.image} alt={result.name} className="w-32 h-32 mx-auto mb-4" />
           )}
           <p className="text-xl font-bold">{result.name}</p>
           <p>เกรด: {result.grade}</p>
@@ -106,11 +105,7 @@ export default function Gacha() {
                 key={index}
                 className="border border-gray-300 rounded p-2 flex flex-col items-center"
               >
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-16 h-16 mb-2"
-                />
+                <img src={item.image} alt={item.name} className="w-16 h-16 mb-2" />
                 <p className="text-sm font-semibold text-center">{item.name}</p>
                 <p className="text-xs text-gray-500">เกรด: {item.grade}</p>
               </div>

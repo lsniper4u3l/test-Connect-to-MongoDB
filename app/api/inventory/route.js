@@ -9,11 +9,11 @@ async function GET(req) {
         const userId = searchParams.get('userId');
 
         if (!userId) {
-            return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+            return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
         }
 
-        // ดึงข้อมูลไอเทมของผู้ใช้จากฐานข้อมูล
-        const inventory = await prisma.userItem.findMany({
+        // ดึงข้อมูลไอเทมทั้งหมดของผู้ใช้
+        const inventory = await prisma.inventory.findMany({
             where: { userId },
         });
 
@@ -25,3 +25,4 @@ async function GET(req) {
 }
 
 module.exports = { GET };
+
