@@ -27,6 +27,7 @@ export default function Gacha({ userId }) {
   const [inventory, setInventory] = useState([]);
   const [items, setItems] = useState(null);
   const [error, setError] = useState(null); // เก็บข้อความข้อผิดพลาด
+  const [debugInfo, setDebugInfo] = useState(null); // เก็บข้อมูล Debug
 
   useEffect(() => {
     // ดึงข้อมูลไอเทมทั้งหมด
@@ -34,6 +35,7 @@ export default function Gacha({ userId }) {
       .then((data) => {
         if (data && data.default) {
           setItems(data.default);
+          setDebugInfo(`Loaded items: ${JSON.stringify(data.default, null, 2)}`);
         } else {
           setError('ไม่สามารถโหลดข้อมูลไอเทมได้');
         }
@@ -43,7 +45,10 @@ export default function Gacha({ userId }) {
     // ดึงข้อมูลช่องเก็บของ
     fetch(`/api/inventory?userId=${userId}`)
       .then((res) => res.json())
-      .then((data) => setInventory(data))
+      .then((data) => {
+        setInventory(data);
+        setDebugInfo(`Loaded inventory: ${JSON.stringify(data, null, 2)}`);
+      })
       .catch(() => setError('เกิดข้อผิดพลาดในการดึงข้อมูลช่องเก็บของ'));
   }, [userId]);
 
@@ -64,6 +69,7 @@ export default function Gacha({ userId }) {
       })
         .then((res) => {
           if (!res.ok) {
+            setDebugInfo(`API Response: ${res.status} ${res.statusText}`);
             throw new Error('ไม่สามารถบันทึกไอเทมได้');
           }
           return res.json();
@@ -71,8 +77,9 @@ export default function Gacha({ userId }) {
         .then((data) => {
           setResult(data);
           setInventory((prev) => [...prev, data]);
+          setDebugInfo(`Saved item: ${JSON.stringify(data, null, 2)}`);
         })
-        .catch(() => setError('เกิดข้อผิดพลาดในการบันทึกไอเทม'));
+        .catch((err) => setError('เกิดข้อผิดพลาดในการบันทึกไอเทม'));
     } else {
       setResult({ name: 'ไม่มีไอเทมที่ตรงเกรด', image: '', grade: 'N/A', power: 0 });
     }
@@ -86,6 +93,14 @@ export default function Gacha({ userId }) {
       {error && (
         <div className="bg-red-100 text-red-700 border border-red-400 rounded p-3 mb-4">
           <p>{error}</p>
+        </div>
+      )}
+
+      {/* แสดง Debug Info */}
+      {debugInfo && (
+        <div className="bg-gray-100 text-gray-700 border border-gray-400 rounded p-3 mb-4">
+          <h2 className="text-sm font-bold mb-2">Debug Information</h2>
+          <pre className="text-xs overflow-auto">{debugInfo}</pre>
         </div>
       )}
 
