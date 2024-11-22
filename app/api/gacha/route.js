@@ -7,12 +7,15 @@ async function POST(req) {
     try {
         const { userId, item } = await req.json();
 
-        // ตรวจสอบว่า `userId` และ `item` มีข้อมูลครบถ้วน
-        if (!userId || !item || !item.name || !item.category) {
-            return NextResponse.json({ error: 'Invalid input data' }, { status: 400 });
+        // ตรวจสอบข้อมูลที่ส่งมา
+        if (!userId || typeof userId !== 'string') {
+            return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 });
+        }
+        if (!item || !item.name || !item.category || !item.grade || !item.power) {
+            return NextResponse.json({ error: 'Invalid item data' }, { status: 400 });
         }
 
-        // ตรวจสอบว่าผู้ใช้มีอยู่ในฐานข้อมูล
+        // ตรวจสอบว่าผู้ใช้มีอยู่ในระบบหรือไม่
         const user = await prisma.user.findUnique({
             where: { id: userId },
         });
@@ -21,7 +24,7 @@ async function POST(req) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        // บันทึกไอเทมในฐานข้อมูล
+        // เพิ่มไอเทมลงใน Inventory
         const newItem = await prisma.inventory.create({
             data: {
                 name: item.name,
@@ -34,11 +37,10 @@ async function POST(req) {
             },
         });
 
-        // ส่งไอเทมที่เพิ่มกลับไปยังผู้ใช้
         return NextResponse.json(newItem);
     } catch (error) {
         console.error('Error in /api/gacha:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
     }
 }
 

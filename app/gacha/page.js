@@ -54,7 +54,6 @@ export default function Gacha({ userId }) {
 
   const handleGacha = (category) => {
     setError(null); // ล้างข้อผิดพลาดก่อนเริ่มสุ่ม
-  
     if (!items || !items[category]) {
       setError('ข้อมูลไอเทมหรือประเภทไอเทมไม่ถูกต้อง');
       return;
@@ -63,8 +62,7 @@ export default function Gacha({ userId }) {
     const item = getRandomItem(category, items);
   
     if (item) {
-      // เตรียมข้อมูลที่ส่งไปยัง API
-      setDebugInfo(`Preparing to send: ${JSON.stringify({ userId, item }, null, 2)}`);
+      setDebugInfo(`Sending Data: ${JSON.stringify({ userId, item }, null, 2)}`);
   
       fetch('/api/gacha', {
         method: 'POST',
@@ -74,7 +72,10 @@ export default function Gacha({ userId }) {
         .then((res) => {
           setDebugInfo(`API Response: ${res.status} ${res.statusText}`);
           if (!res.ok) {
-            throw new Error('ไม่สามารถบันทึกไอเทมได้');
+            return res.json().then((data) => {
+              setDebugInfo(`API Error Response: ${JSON.stringify(data, null, 2)}`);
+              throw new Error(data.error || 'ไม่สามารถบันทึกไอเทมได้');
+            });
           }
           return res.json();
         })
@@ -87,6 +88,7 @@ export default function Gacha({ userId }) {
       setResult({ name: 'ไม่มีไอเทมที่ตรงเกรด', image: '', grade: 'N/A', power: 0 });
     }
   };
+  
   
 
   return (
