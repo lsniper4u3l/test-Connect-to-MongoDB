@@ -12,17 +12,16 @@ async function GET(req) {
             return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
         }
 
-        // ดึงข้อมูลไอเทมทั้งหมดของผู้ใช้
+        // ดึงข้อมูลไอเทมจากฐานข้อมูล
         const inventory = await prisma.inventory.findMany({
             where: { userId },
         });
 
         return NextResponse.json(inventory);
     } catch (error) {
-        console.error('Error fetching inventory:', error);
+        console.error('Error in /api/inventory:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
 
 module.exports = { GET };
-

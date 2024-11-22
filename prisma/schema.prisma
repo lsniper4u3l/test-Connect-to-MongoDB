@@ -29,6 +29,6 @@ model Inventory {
   upgrade   Int      @default(0)
   power     Int
   userId    String   @db.ObjectId
-  user      User     @relation("UserItems", fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
 }

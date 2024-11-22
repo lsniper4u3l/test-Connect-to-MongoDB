@@ -53,37 +53,41 @@ export default function Gacha({ userId }) {
   }, [userId]);
 
   const handleGacha = (category) => {
-    setError(null); // รีเซ็ตข้อผิดพลาดก่อนเริ่มการสุ่ม
+    setError(null); // ล้างข้อผิดพลาดก่อนเริ่มสุ่ม
+  
     if (!items || !items[category]) {
       setError('ข้อมูลไอเทมหรือประเภทไอเทมไม่ถูกต้อง');
       return;
     }
-
+  
     const item = getRandomItem(category, items);
-
+  
     if (item) {
+      // เตรียมข้อมูลที่ส่งไปยัง API
+      setDebugInfo(`Preparing to send: ${JSON.stringify({ userId, item }, null, 2)}`);
+  
       fetch('/api/gacha', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, item }),
       })
         .then((res) => {
+          setDebugInfo(`API Response: ${res.status} ${res.statusText}`);
           if (!res.ok) {
-            setDebugInfo(`API Response: ${res.status} ${res.statusText}`);
             throw new Error('ไม่สามารถบันทึกไอเทมได้');
           }
           return res.json();
         })
         .then((data) => {
-          setResult(data);
-          setInventory((prev) => [...prev, data]);
-          setDebugInfo(`Saved item: ${JSON.stringify(data, null, 2)}`);
+          setResult(data); // แสดงผลลัพธ์การสุ่ม
+          setInventory((prev) => [...prev, data]); // เพิ่มไอเทมในช่องเก็บของ
         })
         .catch((err) => setError('เกิดข้อผิดพลาดในการบันทึกไอเทม'));
     } else {
       setResult({ name: 'ไม่มีไอเทมที่ตรงเกรด', image: '', grade: 'N/A', power: 0 });
     }
   };
+  
 
   return (
     <div className="container mx-auto p-4">

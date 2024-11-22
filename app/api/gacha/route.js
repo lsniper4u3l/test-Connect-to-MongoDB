@@ -1,3 +1,5 @@
+// app/api/gacha/route.js
+
 const { NextResponse } = require('next/server');
 const { prisma } = require('@/lib/prisma');
 
@@ -5,12 +7,12 @@ async function POST(req) {
     try {
         const { userId, item } = await req.json();
 
-        // ตรวจสอบว่า userId และ item ถูกต้อง
+        // ตรวจสอบว่า `userId` และ `item` มีข้อมูลครบถ้วน
         if (!userId || !item || !item.name || !item.category) {
             return NextResponse.json({ error: 'Invalid input data' }, { status: 400 });
         }
 
-        // ตรวจสอบว่าผู้ใช้มีอยู่ในระบบหรือไม่
+        // ตรวจสอบว่าผู้ใช้มีอยู่ในฐานข้อมูล
         const user = await prisma.user.findUnique({
             where: { id: userId },
         });
@@ -19,7 +21,7 @@ async function POST(req) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        // เพิ่มไอเทมในช่องเก็บของ
+        // บันทึกไอเทมในฐานข้อมูล
         const newItem = await prisma.inventory.create({
             data: {
                 name: item.name,
@@ -32,9 +34,10 @@ async function POST(req) {
             },
         });
 
+        // ส่งไอเทมที่เพิ่มกลับไปยังผู้ใช้
         return NextResponse.json(newItem);
     } catch (error) {
-        console.error('Error adding item to inventory:', error);
+        console.error('Error in /api/gacha:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
