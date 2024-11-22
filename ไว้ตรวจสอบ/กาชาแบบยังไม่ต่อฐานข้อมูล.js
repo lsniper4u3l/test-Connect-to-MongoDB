@@ -1,8 +1,10 @@
+// app/gacha/page.js
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import items from '@/Data/DataItemGame';
+import items from '@/Data/DataItemGame'; // นำเข้าข้อมูลจาก DataItemGame.js
 
 function getRandomGrade() {
   const random = Math.random() * 100;
@@ -25,40 +27,13 @@ function getRandomItem(category) {
 
 export default function Gacha() {
   const [result, setResult] = useState(null);
-  const [inventory, setInventory] = useState([]);
-  const userId = 'user-unique-id'; // ตัวอย่าง userId
+  const [inventory, setInventory] = useState([]); // ช่องเก็บของ
 
-  useEffect(() => {
-    // ดึงข้อมูลไอเทมจาก API
-    fetch(`/api/inventory?userId=${userId}`)
-      .then((res) => res.json())
-      .then((data) => setInventory(data))
-      .catch((error) => console.error('Error fetching inventory:', error));
-  }, []);
-
-  const handleGacha = async (category) => {
+  const handleGacha = (category) => {
     const item = getRandomItem(category);
-
     if (item) {
-      // ส่งไอเทมไปยัง API เพื่อบันทึกในฐานข้อมูล
-      try {
-        const res = await fetch('/api/gacha', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ userId, item }),
-        });
-
-        const savedItem = await res.json();
-        if (!savedItem.error) {
-          setInventory((prev) => [...prev, savedItem]);
-        }
-      } catch (error) {
-        console.error('Error saving gacha item:', error);
-      }
+      setInventory((prev) => [...prev, item]); // เพิ่มไอเทมที่สุ่มได้ไปยังช่องเก็บของ
     }
-
     setResult(item || { name: 'ไม่มีไอเทมที่ตรงเกรด', image: '', grade: 'N/A', power: 0 });
   };
 
