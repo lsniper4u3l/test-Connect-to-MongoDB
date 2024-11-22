@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTelegramAuth } from '@/hooks/useTelegramAuth';
-import GachaButton from '@/components/GachaButton';
-import Inventory from '@/components/Inventory';
-import DebugLog from '@/components/DebugLog';
-import GachaResult from '@/components/GachaResult';
+import GachaButton from '@/Components/GachaButton';
+import Inventory from '@/Components/Inventory';
+import DebugLog from '@/Components/DebugLog';
+import GachaResult from '@/Components/GachaResult';
 
 export default function Gacha() {
   const [result, setResult] = useState(null); // ไอเทมที่สุ่มได้
@@ -18,30 +18,35 @@ export default function Gacha() {
   useEffect(() => {
     const fetchInventory = async () => {
       try {
-        if (!user?.telegramId) return;
-
+        if (!user?.telegramId) {
+          setDebugLog((prev) => [...prev, 'No user ID available']);
+          return;
+        }
+  
         const response = await fetch('/api/inventory', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: user.telegramId }), // ส่ง userId ผ่าน body
+          body: JSON.stringify({ id: user.telegramId }),
         });
-
+  
         const data = await response.json();
-
+  
         if (data.error) {
           setDebugLog((prev) => [...prev, `Error fetching inventory: ${data.error}`]);
+          setInventory([]); // ตั้งค่า inventory เป็นว่าง
           return;
         }
-
+  
         setInventory(data); // ตั้งค่า inventory
         setDebugLog((prev) => [...prev, 'Inventory loaded successfully']);
       } catch (error) {
         setDebugLog((prev) => [...prev, `Fetch error: ${error.message}`]);
       }
     };
-
+  
     fetchInventory();
   }, [user?.telegramId]);
+  
 
   // ฟังก์ชันสำหรับสุ่มไอเทม
   const handleGacha = async (category) => {
