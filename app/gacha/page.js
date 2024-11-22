@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-// ฟังก์ชันสุ่มเกรด
 function getRandomGrade() {
   const random = Math.random() * 100;
   if (random <= 0.0001) return 'S';
@@ -15,7 +14,6 @@ function getRandomGrade() {
   return 'F';
 }
 
-// ฟังก์ชันสุ่มไอเทม
 function getRandomItem(category, items) {
   const grade = getRandomGrade();
   const filteredItems = items[category].filter((item) => item.grade === grade);
@@ -27,13 +25,19 @@ function getRandomItem(category, items) {
 export default function Gacha({ userId }) {
   const [result, setResult] = useState(null);
   const [inventory, setInventory] = useState([]);
-  const [items, setItems] = useState(null); // ไอเทมทั้งหมด
+  const [items, setItems] = useState(null);
 
   useEffect(() => {
     // ดึงข้อมูลไอเทมทั้งหมด
-    import('@/Data/DataItemGame').then((data) => setItems(data.default));
+    import('@/Data/DataItemGame').then((data) => {
+      if (data && data.default) {
+        setItems(data.default);
+      } else {
+        console.error('Failed to load items.');
+      }
+    });
 
-    // ดึงไอเทมในช่องเก็บของจาก API
+    // ดึงข้อมูลช่องเก็บของ
     fetch(`/api/inventory?userId=${userId}`)
       .then((res) => res.json())
       .then((data) => setInventory(data))
@@ -41,22 +45,28 @@ export default function Gacha({ userId }) {
   }, [userId]);
 
   const handleGacha = (category) => {
-    if (!items) return;
+    if (!items || !items[category]) {
+      console.error('Items not loaded or category not found.');
+      return;
+    }
 
-    // สุ่มไอเทม
     const item = getRandomItem(category, items);
 
     if (item) {
-      // บันทึกไอเทมลงฐานข้อมูล
       fetch('/api/gacha', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, item }),
       })
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error('Failed to save item');
+          }
+          return res.json();
+        })
         .then((data) => {
-          setResult(data); // แสดงผลลัพธ์การสุ่ม
-          setInventory((prev) => [...prev, data]); // เพิ่มไอเทมในช่องเก็บของ
+          setResult(data);
+          setInventory((prev) => [...prev, data]);
         })
         .catch((err) => console.error('Error saving item:', err));
     } else {
@@ -68,7 +78,6 @@ export default function Gacha({ userId }) {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6 text-center">Gacha Game</h1>
 
-      {/* ปุ่มสุ่ม */}
       <div className="flex flex-wrap justify-center gap-4 mb-8">
         {items &&
           Object.keys(items).map((category) => (
@@ -82,7 +91,6 @@ export default function Gacha({ userId }) {
           ))}
       </div>
 
-      {/* ผลการสุ่ม */}
       {result && (
         <div className="text-center">
           <h2 className="text-lg font-semibold mb-4">ผลการสุ่ม:</h2>
@@ -95,7 +103,6 @@ export default function Gacha({ userId }) {
         </div>
       )}
 
-      {/* ช่องเก็บของ */}
       <div className="mt-10">
         <h2 className="text-xl font-bold mb-4 text-center">ช่องเก็บของ</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -118,7 +125,6 @@ export default function Gacha({ userId }) {
         </div>
       </div>
 
-      {/* ปุ่มกลับหน้าหลัก */}
       <div className="mt-8 text-center">
         <Link href="/">
           <a className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded">
