@@ -100,19 +100,7 @@ export default function GachaPage() {
           <p>พลัง: {result.power}</p>
         </div>
       )}
-      <div className="mt-8">
-        <h2 className="text-xl font-bold">กล่องเก็บของ</h2>
-        <ul className="mt-4 grid grid-cols-2 gap-4">
-          {inventory.map((item) => (
-            <li key={item.id} className="border p-4 rounded bg-gray-100">
-              <h3 className="font-bold">{item.name}</h3>
-              <p>ประเภท: {item.category}</p>
-              <p>เกรด: {item.grade}</p>
-              <p>พลัง: {item.power}</p>
-            </li>
-          ))}
-        </ul>
-      </div>
+      
     </div>
   );
 }
