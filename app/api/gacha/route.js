@@ -1,38 +1,45 @@
-// app/api/gacha/route.js
-
 const { NextResponse } = require('next/server');
 const { prisma } = require('@/lib/prisma');
-const items = require('@/Data/DataItemGame'); // นำเข้าข้อมูลไอเทม
+const items = require('@/Data/DataItemGame');
 
 async function POST(req) {
+  const debugLog = []; // สร้าง Debug Log ที่เก็บข้อความ
   try {
     const userData = await req.json();
 
+    debugLog.push(`Request Body: ${JSON.stringify(userData)}`); // Log ข้อมูล Request
+
     if (!userData || !userData.id || !userData.category) {
-      return NextResponse.json({ error: 'Invalid request data' }, { status: 400 });
+      debugLog.push('Invalid request data');
+      return NextResponse.json({ error: 'Invalid request data', debugLog }, { status: 400 });
     }
 
-    // ตรวจสอบผู้ใช้งานจากฐานข้อมูล
     const user = await prisma.user.findUnique({
       where: { telegramId: userData.id },
     });
 
+    debugLog.push(`User Found: ${JSON.stringify(user)}`); // Log ผู้ใช้
+
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      debugLog.push('User not found');
+      return NextResponse.json({ error: 'User not found', debugLog }, { status: 404 });
     }
 
-    // สุ่มไอเทมตามประเภท
     const category = userData.category;
-    const grade = getRandomGrade(); // ฟังก์ชันสุ่มเกรด
+    const grade = getRandomGrade();
     const filteredItems = items[category]?.filter((item) => item.grade === grade);
 
+    debugLog.push(`Filtered Items: ${JSON.stringify(filteredItems)}`); // Log ไอเทมที่ค้นหา
+
     if (!filteredItems || filteredItems.length === 0) {
-      return NextResponse.json({ error: 'No item available for the grade' }, { status: 400 });
+      debugLog.push('No item available for the grade');
+      return NextResponse.json({ error: 'No item available for the grade', debugLog }, { status: 400 });
     }
 
     const randomItem = filteredItems[Math.floor(Math.random() * filteredItems.length)];
 
-    // บันทึกไอเทมเข้าสู่ Inventory
+    debugLog.push(`Random Item Selected: ${JSON.stringify(randomItem)}`); // Log ไอเทมที่สุ่มได้
+
     const newItem = await prisma.inventory.create({
       data: {
         name: randomItem.name,
@@ -45,10 +52,12 @@ async function POST(req) {
       },
     });
 
-    return NextResponse.json(newItem);
+    debugLog.push(`New Item Created: ${JSON.stringify(newItem)}`); // Log ไอเทมที่สร้าง
+
+    return NextResponse.json({ item: newItem, debugLog }); // ส่ง Debug Log กลับไปด้วย
   } catch (error) {
-    console.error('Error processing gacha:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    debugLog.push(`Error: ${error.message}`);
+    return NextResponse.json({ error: 'Internal server error', debugLog }, { status: 500 });
   }
 }
 

@@ -2,43 +2,41 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useTelegramAuth } from '@/hooks/useTelegramAuth';
 
 export default function Gacha() {
   const [result, setResult] = useState(null); // ไอเทมที่สุ่มได้
   const [inventory, setInventory] = useState([]); // ช่องเก็บของ
-  const [debugLog, setDebugLog] = useState([]); // Debug Log แสดงบนจอ
+  const [debugLog, setDebugLog] = useState([]); // Debug Log
+  const { user, error } = useTelegramAuth();
 
-  // ฟังก์ชันสุ่มไอเทมและบันทึกไปที่ฐานข้อมูล
   const handleGacha = async (category) => {
     try {
       setDebugLog((prev) => [...prev, `เริ่มสุ่มไอเทมประเภท: ${category}`]); // เพิ่ม Debug Log
 
-      // เรียก API สำหรับสุ่มกาชา
       const response = await fetch('/api/gacha', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: 'user-id-placeholder', category }), // ใส่ userId ของผู้ใช้งาน
+        body: JSON.stringify({ id: user.telegramId, category }), // ใส่ userId ของผู้ใช้งาน
       });
 
-      const newItem = await response.json();
+      const responseData = await response.json();
 
-      if (newItem.error) {
-        const errorMessage = `เกิดข้อผิดพลาด: ${newItem.error}`;
-        setDebugLog((prev) => [...prev, errorMessage]); // แสดง Error ใน Debug Log
+      if (responseData.error) {
+        setDebugLog((prev) => [...prev, ...responseData.debugLog]); // เพิ่ม Debug Log จาก API
         return;
       }
 
-      const successMessage = `สุ่มสำเร็จ! ได้รับไอเทม: ${newItem.name} (เกรด: ${newItem.grade})`;
-      setDebugLog((prev) => [...prev, successMessage]); // แสดงข้อความสำเร็จใน Debug Log
-
-      // เพิ่มไอเทมเข้าสู่ inventory และแสดงผลไอเทมที่สุ่มได้
-      setInventory((prev) => [...prev, newItem]);
-      setResult(newItem);
+      const newItem = responseData.item;
+      setDebugLog((prev) => [...prev, ...responseData.debugLog]); // เพิ่ม Debug Log จาก API
+      setInventory((prev) => [...prev, newItem]); // เพิ่มไอเทมเข้าสู่ช่องเก็บของ
+      setResult(newItem); // แสดงไอเทมที่สุ่มได้
     } catch (error) {
-      const fetchError = `เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์: ${error.message}`;
-      setDebugLog((prev) => [...prev, fetchError]); // แสดงข้อผิดพลาดใน Debug Log
+      setDebugLog((prev) => [...prev, `เกิดข้อผิดพลาดในการเชื่อมต่อ: ${error.message}`]); // Debug ข้อผิดพลาด
     }
   };
+  if (error) return <div className="container mx-auto p-4 text-red-500">{error}</div>;
+  if (!user) return <div className="container mx-auto p-4">Loading...</div>;
 
   return (
     <div className="container mx-auto p-4">
