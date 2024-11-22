@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTelegramAuth } from '@/hooks/useTelegramAuth';
 
@@ -10,14 +10,46 @@ export default function Gacha() {
   const [debugLog, setDebugLog] = useState([]); // Debug Log
   const { user, error } = useTelegramAuth();
 
+  // ฟังก์ชันดึงช่องเก็บของจาก API
+  useEffect(() => {
+    const fetchInventory = async () => {
+      try {
+        if (!user?.telegramId) return;
+
+        setDebugLog((prev) => [...prev, 'กำลังโหลดช่องเก็บของ...']);
+
+        const response = await fetch('/api/inventory', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: user.telegramId }), // ส่ง userId ไปยัง API
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+          setDebugLog((prev) => [...prev, `Error fetching inventory: ${data.error}`]);
+          return;
+        }
+
+        setInventory(data); // ตั้งค่า inventory จากฐานข้อมูล
+        setDebugLog((prev) => [...prev, 'ช่องเก็บของโหลดสำเร็จ']);
+      } catch (error) {
+        setDebugLog((prev) => [...prev, `Fetch error: ${error.message}`]);
+      }
+    };
+
+    fetchInventory();
+  }, [user]); // ทำงานเมื่อ `user` พร้อมใช้งาน
+
+  // ฟังก์ชันสุ่มไอเทม
   const handleGacha = async (category) => {
     try {
-      setDebugLog((prev) => [...prev, `เริ่มสุ่มไอเทมประเภท: ${category}`]); // เพิ่ม Debug Log
+      setDebugLog((prev) => [...prev, `เริ่มสุ่มไอเทมประเภท: ${category}`]);
 
       const response = await fetch('/api/gacha', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: user.telegramId, category }), // ใส่ userId ของผู้ใช้งาน
+        body: JSON.stringify({ id: user.telegramId, category }), // ส่ง userId ของผู้ใช้งาน
       });
 
       const responseData = await response.json();
@@ -28,13 +60,14 @@ export default function Gacha() {
       }
 
       const newItem = responseData.item;
-      setDebugLog((prev) => [...prev, ...responseData.debugLog]); // เพิ่ม Debug Log จาก API
+      setDebugLog((prev) => [...prev, ...responseData.debugLog]);
       setInventory((prev) => [...prev, newItem]); // เพิ่มไอเทมเข้าสู่ช่องเก็บของ
       setResult(newItem); // แสดงไอเทมที่สุ่มได้
     } catch (error) {
-      setDebugLog((prev) => [...prev, `เกิดข้อผิดพลาดในการเชื่อมต่อ: ${error.message}`]); // Debug ข้อผิดพลาด
+      setDebugLog((prev) => [...prev, `เกิดข้อผิดพลาดในการเชื่อมต่อ: ${error.message}`]);
     }
   };
+
   if (error) return <div className="container mx-auto p-4 text-red-500">{error}</div>;
   if (!user) return <div className="container mx-auto p-4">Loading...</div>;
 
@@ -77,9 +110,9 @@ export default function Gacha() {
         <h2 className="text-xl font-bold mb-4 text-center">ช่องเก็บของ</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {inventory.length > 0 ? (
-            inventory.map((item, index) => (
+            inventory.map((item) => (
               <div
-                key={index}
+                key={item.id}
                 className="border border-gray-300 rounded p-2 flex flex-col items-center"
               >
                 <img
