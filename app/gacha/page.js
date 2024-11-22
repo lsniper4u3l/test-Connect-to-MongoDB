@@ -6,11 +6,13 @@ import Link from 'next/link';
 export default function Gacha() {
   const [result, setResult] = useState(null); // ไอเทมที่สุ่มได้
   const [inventory, setInventory] = useState([]); // ช่องเก็บของ
-  const [debugLog, setDebugLog] = useState([]); // เก็บ debug log
+  const [debugLog, setDebugLog] = useState([]); // Debug Log แสดงบนจอ
 
   // ฟังก์ชันสุ่มไอเทมและบันทึกไปที่ฐานข้อมูล
   const handleGacha = async (category) => {
     try {
+      setDebugLog((prev) => [...prev, `เริ่มสุ่มไอเทมประเภท: ${category}`]); // เพิ่ม Debug Log
+
       // เรียก API สำหรับสุ่มกาชา
       const response = await fetch('/api/gacha', {
         method: 'POST',
@@ -21,24 +23,26 @@ export default function Gacha() {
       const newItem = await response.json();
 
       if (newItem.error) {
-        setDebugLog((prev) => [...prev, `Error: ${newItem.error}`]);
-        console.error('Error:', newItem.error);
+        const errorMessage = `เกิดข้อผิดพลาด: ${newItem.error}`;
+        setDebugLog((prev) => [...prev, errorMessage]); // แสดง Error ใน Debug Log
         return;
       }
+
+      const successMessage = `สุ่มสำเร็จ! ได้รับไอเทม: ${newItem.name} (เกรด: ${newItem.grade})`;
+      setDebugLog((prev) => [...prev, successMessage]); // แสดงข้อความสำเร็จใน Debug Log
 
       // เพิ่มไอเทมเข้าสู่ inventory และแสดงผลไอเทมที่สุ่มได้
       setInventory((prev) => [...prev, newItem]);
       setResult(newItem);
-      setDebugLog((prev) => [...prev, `Gacha Success: ${JSON.stringify(newItem)}`]);
     } catch (error) {
-      setDebugLog((prev) => [...prev, `Fetch Error: ${error.message}`]);
-      console.error('Failed to gacha:', error);
+      const fetchError = `เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์: ${error.message}`;
+      setDebugLog((prev) => [...prev, fetchError]); // แสดงข้อผิดพลาดใน Debug Log
     }
   };
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6 text-center">Gacha Game</h1>
+      <h1 className="text-2xl font-bold mb-6 text-center">เกมกาชา</h1>
 
       {/* ปุ่มสุ่มกาชา */}
       <div className="flex flex-wrap justify-center gap-4 mb-8">
