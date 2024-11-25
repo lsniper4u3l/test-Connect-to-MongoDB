@@ -6,16 +6,15 @@ const { prisma } = require('@/lib/prisma');
 async function POST(req) {
   try {
     // รับข้อมูล userId จาก body
-    const userData = await req.json();
-    const userId = userData.id; // รับ userId จาก body
+    const { userIdInv } = await req.json();
 
-    if (!userId) {
+    if (!userIdInv) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
     // ดึงข้อมูล inventory ที่เชื่อมโยงกับ userId
     const inventory = await prisma.inventory.findMany({
-      where: { userId },
+      where: { userId: userIdInv },
       select: {
         id: true,
         name: true,

@@ -23,12 +23,12 @@ export default function Gacha() {
         const response = await fetch('/api/inventory', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: user.telegramId }), // ส่ง userId ผ่าน body
+          body: JSON.stringify({ userIdInv: user.telegramId }), // ส่ง userId ผ่าน body
         });
 
         const data = await response.json();
 
-        if (data.error) {
+        if (data.error) {  // เช็ค eror 
           setDebugLog((prev) => [...prev, `Error fetching inventory: ${data.error}`]);
           return;
         }
