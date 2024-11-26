@@ -7,7 +7,7 @@ import { useEquipment } from '@/hooks/useEquipment';
 import Loading from '@/Components/Loading';
 import ErrorMessage from '@/Components/ErrorMessage';
 import DebugLog from '@/Components/DebugLog';
-import { useState } from 'react';
+import { useEffect , useState } from 'react';
 
 export default function Character() {
   const { user, error } = useTelegramAuth();
