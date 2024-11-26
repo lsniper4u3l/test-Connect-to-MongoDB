@@ -33,7 +33,6 @@ export function useEquipment(userId, setDebugLog) {
             ...prev,
             '❌ Error loading equipment or inventory.',
           ]);
-          console.error(equipmentData.error || inventoryData.error);
         } else {
           setDebugLog((prev) => [...prev, '✅ โหลดข้อมูลสำเร็จ!']);
           setEquipment(equipmentData.equipment || {});
@@ -45,7 +44,6 @@ export function useEquipment(userId, setDebugLog) {
           ...prev,
           `❌ Error fetching data: ${error.message}`,
         ]);
-        console.error('Error fetching data:', error);
       }
     };
 
@@ -69,42 +67,45 @@ export function useEquipment(userId, setDebugLog) {
   };
 
   // ฟังก์ชันสำหรับสวมใส่อุปกรณ์
-  const handleEquip = async (itemId, slot, action) => {
+  const handleEquip = async (itemId, slot) => {
     try {
-      setDebugLog((prev) => [...prev, `🛠️ ${action === 'equip' ? 'กำลังสวมใส่' : 'กำลังถอด'}ไอเทมในช่อง: ${slot}`]);
-  
+      setDebugLog((prev) => [...prev, `🛠️ กำลังสวมใส่ไอเทมในช่อง: ${slot}`]);
+
       const response = await fetch('/api/equip', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, itemId, slot, action }),
+        body: JSON.stringify({ userId, itemId, slot }),
       });
-  
+
       const data = await response.json();
       if (data.error) {
         setDebugLog((prev) => [...prev, ...data.debugLog, `❌ Error: ${data.error}`]);
       } else {
-        setDebugLog((prev) => [...prev, ...data.debugLog]);
-        // โหลดข้อมูลใหม่หลังจากอัปเดต
-        const equipmentResponse = await fetch('/api/equipment', {
+        setDebugLog((prev) => [...prev, ...data.debugLog, `✅ สวมใส่สำเร็จใน ${slot}`]);
+
+        // รีเฟรช `equipment` เพื่อดึงข้อมูลล่าสุด
+        const updatedEquipmentResponse = await fetch('/api/equipment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId }),
         });
-        const equipmentData = await equipmentResponse.json();
-        setEquipment(equipmentData.equipment);
-  
+        const updatedEquipment = await updatedEquipmentResponse.json();
+
+        if (!updatedEquipment.error) {
+          setEquipment(updatedEquipment.equipment); // อัปเดต `equipment` ด้วยข้อมูลล่าสุด
+        }
+
+        // อัปเดต `inventory` เพื่อแสดงสถานะการสวมใส่
         setInventory((prev) =>
           prev.map((item) =>
-            item.id === itemId ? { ...item, isEquipped: action === 'equip' } : item
+            item.id === itemId ? { ...item, isEquipped: true } : item
           )
         );
       }
     } catch (error) {
-      setDebugLog((prev) => [...prev, `❌ Error: ${error.message}`]);
+      setDebugLog((prev) => [...prev, `❌ Error equipping item: ${error.message}`]);
     }
   };
-  
-  
 
   return {
     equipment,

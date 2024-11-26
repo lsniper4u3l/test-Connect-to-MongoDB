@@ -104,29 +104,25 @@ export default function Character() {
         <h2 className="text-xl font-bold text-gray-700 text-center mb-4">
           🧳 ช่องเก็บของ
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {inventory.map((item) => (
-            <div
-            key={item.id}
-            className={`border p-4 rounded-lg shadow text-center ${
-                item.isEquipped ? 'bg-green-100 border-green-500' : 'bg-gray-50'
-            }`}
-            >
-            <img src={item.image} alt={item.name} className="w-16 h-16 mx-auto mb-2" />
-            <p className="font-semibold">{item.name}</p>
-            <p className="text-sm text-gray-500">เกรด: {item.grade}</p>
-            <button
-                onClick={() => handleEquip(item.id, item.category, item.isEquipped ? 'unequip' : 'equip')}
-                className={`mt-2 px-4 py-2 rounded-lg text-white ${
-                item.isEquipped
-                    ? 'bg-red-500 hover:bg-red-600'
-                    : 'bg-green-500 hover:bg-green-600'
-                }`}
-            >
-                {item.isEquipped ? 'ถอด' : 'สวมใส่'}
-            </button>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {equipment &&
+            Object.keys(equipment).map((slot) => (
+            <div key={slot} className="text-center border p-4 rounded-lg shadow bg-gray-100">
+                <h3 className="text-md font-semibold capitalize mb-2">{slot}</h3>
+                {equipment[slot] ? (
+                <img
+                    src={equipment[slot].image}
+                    alt={equipment[slot].name}
+                    className="w-16 h-16 mx-auto mb-2"
+                />
+                ) : (
+                <div className="w-16 h-16 mx-auto mb-2 bg-gray-300 rounded"></div>
+                )}
+                <p className="text-sm text-gray-500">
+                {equipment[slot] ? equipment[slot].name : 'ไม่มี'}
+                </p>
             </div>
-        ))}
+            ))}
         </div>
 
       </div>
