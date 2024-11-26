@@ -12,8 +12,8 @@ export function useEquipment(userId, setDebugLog) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // ดึงข้อมูลอุปกรณ์ที่สวมใส่
-        setDebugLog((prev) => [...prev, 'กำลังโหลดข้อมูลอุปกรณ์...']);
+        setDebugLog((prev) => [...prev, 'กำลังโหลดข้อมูลอุปกรณ์และช่องเก็บของ...']);
+
         const equipmentResponse = await fetch('/api/equipment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -21,7 +21,6 @@ export function useEquipment(userId, setDebugLog) {
         });
         const equipmentData = await equipmentResponse.json();
 
-        // ดึงข้อมูล Inventory
         const inventoryResponse = await fetch('/api/inventory', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -30,16 +29,22 @@ export function useEquipment(userId, setDebugLog) {
         const inventoryData = await inventoryResponse.json();
 
         if (equipmentData.error || inventoryData.error) {
-          setDebugLog((prev) => [ ...prev, 'Error loading equipment or inventory.', ]);
+          setDebugLog((prev) => [
+            ...prev,
+            '❌ Error loading equipment or inventory.',
+          ]);
           console.error(equipmentData.error || inventoryData.error);
         } else {
-          setDebugLog((prev) => [...prev, 'โหลดข้อมูลสำเร็จ!']);
-          setEquipment(equipmentData.equipment);
-          setInventory(inventoryData);
-          setFilteredInventory(inventoryData); // เริ่มต้นแสดง Inventory ทั้งหมด
+          setDebugLog((prev) => [...prev, '✅ โหลดข้อมูลสำเร็จ!']);
+          setEquipment(equipmentData.equipment || {});
+          setInventory(inventoryData || []);
+          setFilteredInventory(inventoryData || []); // เริ่มต้นแสดง Inventory ทั้งหมด
         }
       } catch (error) {
-        setDebugLog((prev) => [...prev, `Error fetching data: ${error.message}`]);
+        setDebugLog((prev) => [
+          ...prev,
+          `❌ Error fetching data: ${error.message}`,
+        ]);
         console.error('Error fetching data:', error);
       }
     };
@@ -49,7 +54,10 @@ export function useEquipment(userId, setDebugLog) {
 
   // กรอง Inventory ตามหมวดหมู่
   const filterInventory = (category) => {
-    setDebugLog((prev) => [ ...prev, `กำลังกรองประเภท: ${category === 'all' ? 'ทั้งหมด' : category}`, ]);
+    setDebugLog((prev) => [
+      ...prev,
+      `🔍 กำลังกรองประเภท: ${category === 'all' ? 'ทั้งหมด' : category}`,
+    ]);
     if (category === 'all') {
       setFilteredInventory(inventory);
     } else {
@@ -63,14 +71,15 @@ export function useEquipment(userId, setDebugLog) {
   // ฟังก์ชันสำหรับสวมใส่อุปกรณ์
   const handleEquip = async (itemId, slot) => {
     try {
-
-      if (!['weaponL', 'weaponR', 'helmet', 'armor', 'pants', 'boots', 'character'].includes(slot)) {
+      if (
+        !['weaponL', 'weaponR', 'helmet', 'armor', 'pants', 'boots', 'character'].includes(slot)
+      ) {
         setDebugLog((prev) => [...prev, `❌ Invalid slot: ${slot}`]);
         return;
       }
-      setDebugLog((prev) => [...prev, `กำลังสวมใส่ไอเทม: ${slot}`]);
 
-      
+      setDebugLog((prev) => [...prev, `🛠️ กำลังสวมใส่ไอเทม: ${slot}`]);
+
       const response = await fetch('/api/equip', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -93,7 +102,10 @@ export function useEquipment(userId, setDebugLog) {
         );
       }
     } catch (error) {
-      setDebugLog((prev) => [...prev, `❌ Error equipping item: ${error.message}`]);
+      setDebugLog((prev) => [
+        ...prev,
+        `❌ Error equipping item: ${error.message}`,
+      ]);
     }
   };
 
