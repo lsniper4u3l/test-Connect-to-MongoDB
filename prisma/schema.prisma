@@ -19,12 +19,12 @@ model User {
 
   items     Inventory[]
 
-  leftHand  String?     @db.ObjectId 
-  rightHand String?     @db.ObjectId
-  head      String?     @db.ObjectId
-  body      String?     @db.ObjectId
-  legs      String?     @db.ObjectId
-  feet      String?     @db.ObjectId
+  weaponL  String?     @db.ObjectId 
+  weaponR String?     @db.ObjectId
+  helmet      String?     @db.ObjectId
+  armor      String?     @db.ObjectId
+  pants      String?     @db.ObjectId
+  boots      String?     @db.ObjectId
   character String?     @db.ObjectId
 
 }
