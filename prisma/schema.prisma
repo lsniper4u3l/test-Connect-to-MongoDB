@@ -25,6 +25,8 @@ model User {
   body      String?     @db.ObjectId
   legs      String?     @db.ObjectId
   feet      String?     @db.ObjectId
+  character String?     @db.ObjectId
+
 }
 
 model Inventory {
