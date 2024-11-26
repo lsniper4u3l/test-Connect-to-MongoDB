@@ -105,34 +105,30 @@ export default function Character() {
           🧳 ช่องเก็บของ
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {inventory.map((item) => (
+        {inventory.map((item) => (
             <div
-              key={item.id}
-              className="border p-4 rounded-lg shadow text-center bg-gray-50"
+            key={item.id}
+            className={`border p-4 rounded-lg shadow text-center ${
+                item.isEquipped ? 'bg-green-100 border-green-500' : 'bg-gray-50'
+            }`}
             >
-              <img
-                src={item.image}
-                alt={item.name}
-                className="w-16 h-16 mx-auto mb-2"
-              />
-              <p className="font-semibold">{item.name}</p>
-              <p className="text-sm text-gray-500">เกรด: {item.grade}</p>
-              <button
-                    onClick={() => {
-                        handleEquip(item.id, item.category);
-                        setDebugLog((prev) => [...prev, `สวมใส่: ${item.name} ในช่อง ${item.category}`]);
-                    }}
-                    disabled={item.isEquipped}
-                    className={`mt-2 px-4 py-2 rounded-lg text-white ${
-                        item.isEquipped ? 'bg-gray-400' : 'bg-green-500 hover:bg-green-600'
-                    }`}
-                    >
-                    {item.isEquipped ? 'กำลังสวมใส่' : 'สวมใส่'}
-                </button>
-
+            <img src={item.image} alt={item.name} className="w-16 h-16 mx-auto mb-2" />
+            <p className="font-semibold">{item.name}</p>
+            <p className="text-sm text-gray-500">เกรด: {item.grade}</p>
+            <button
+                onClick={() => handleEquip(item.id, item.category, item.isEquipped ? 'unequip' : 'equip')}
+                className={`mt-2 px-4 py-2 rounded-lg text-white ${
+                item.isEquipped
+                    ? 'bg-red-500 hover:bg-red-600'
+                    : 'bg-green-500 hover:bg-green-600'
+                }`}
+            >
+                {item.isEquipped ? 'ถอด' : 'สวมใส่'}
+            </button>
             </div>
-          ))}
+        ))}
         </div>
+
       </div>
 
       {/* Debug Log */}
