@@ -39,22 +39,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* การแนะนำ/เพิ่มเติม */}
-      <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-xl font-semibold text-gray-800 text-center mb-4">
-          🚀 พร้อมลุยหรือยัง?
-        </h2>
-        <p className="text-center text-gray-600">
-          สนุกกับการค้นหาไอเทมสุดพิเศษ ✨ และพัฒนาตัวละครของคุณให้แข็งแกร่งที่สุด 💪
-        </p>
-        <div className="flex justify-center mt-4">
-          <Link href="/about">
-            <a className="text-blue-500 underline text-sm hover:text-blue-700">
-              📖 เรียนรู้เพิ่มเติมเกี่ยวกับระบบ
-            </a>
-          </Link>
-        </div>
-      </div>
     </div>
   );
 }

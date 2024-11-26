@@ -6,16 +6,19 @@ import { useTelegramAuth } from '@/hooks/useTelegramAuth';
 import { useEquipment } from '@/hooks/useEquipment';
 import Loading from '@/Components/Loading';
 import ErrorMessage from '@/Components/ErrorMessage';
+import DebugLog from '@/Components/DebugLog';
+import { useState } from 'react';
 
 export default function Character() {
   const { user, error } = useTelegramAuth();
+  const [debugLog, setDebugLog] = useState([]); // เพิ่ม state สำหรับ Debug Log
   const {
     equipment,
     inventory,
     filterInventory,
     selectedCategory,
     handleEquip,
-  } = useEquipment(user?.id);
+  } = useEquipment(user?.id, setDebugLog); // ส่ง setDebugLog ให้ Hook เพื่อบันทึก Log
 
   if (error) {
     return <ErrorMessage error={error} />;
@@ -96,7 +99,7 @@ export default function Character() {
       </div>
 
       {/* Inventory */}
-      <div className="bg-white shadow-md rounded-lg p-6">
+      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
         <h2 className="text-xl font-bold text-gray-700 text-center mb-4">
           🧳 ช่องเก็บของ
         </h2>
@@ -114,7 +117,13 @@ export default function Character() {
               <p className="font-semibold">{item.name}</p>
               <p className="text-sm text-gray-500">เกรด: {item.grade}</p>
               <button
-                onClick={() => handleEquip(item.id, item.category)}
+                onClick={() => {
+                  handleEquip(item.id, item.category);
+                  setDebugLog((prev) => [
+                    ...prev,
+                    `สวมใส่: ${item.name} ในช่อง ${item.category}`,
+                  ]);
+                }}
                 disabled={item.isEquipped}
                 className={`mt-2 px-4 py-2 rounded-lg text-white ${
                   item.isEquipped
@@ -127,6 +136,14 @@ export default function Character() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Debug Log */}
+      <div className="bg-white shadow-md rounded-lg p-6">
+        <h2 className="text-xl font-bold text-gray-700 text-center mb-4">
+          🔍 Debug Log
+        </h2>
+        <DebugLog logs={debugLog} />
       </div>
     </div>
   );
