@@ -7,6 +7,7 @@ async function POST(req) {
   const debugLog = []; // เก็บ Debug Log
   try {
     const { userId, itemId, slot } = await req.json();
+    debugLog.push(`🟢 รับค่าจาก Client: userId=${userId}, itemId=${itemId}, slot=${slot}`);
 
     if (!userId || !itemId || !slot) {
       debugLog.push('❌ Missing required parameters: User ID, Item ID, or Slot.');
@@ -27,8 +28,7 @@ async function POST(req) {
       return NextResponse.json({ error: 'Invalid slot', debugLog }, { status: 400 });
     }
 
-    // ตรวจสอบผู้ใช้งาน
-    debugLog.push('🔍 Checking if user exists...');
+    debugLog.push('🔍 ตรวจสอบ User...');
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
       debugLog.push('❌ User not found.');
@@ -36,8 +36,7 @@ async function POST(req) {
     }
     debugLog.push('✅ User found.');
 
-    // ตรวจสอบไอเทม
-    debugLog.push('🔍 Checking if item exists...');
+    debugLog.push('🔍 ตรวจสอบ Item...');
     const item = await prisma.inventory.findUnique({ where: { id: itemId } });
     if (!item) {
       debugLog.push('❌ Item not found.');
@@ -45,31 +44,28 @@ async function POST(req) {
     }
     debugLog.push('✅ Item found.');
 
-    // ถ้ามีไอเทมใน slot นี้แล้ว ให้ถอดออกก่อน
-    debugLog.push(`🔄 Unequipping current item in slot: ${slot}`);
+    debugLog.push(`🔄 กำลังถอดไอเทมเก่าในช่อง: ${slot}`);
     const currentItemId = user[slot];
     if (currentItemId) {
       await prisma.inventory.update({
         where: { id: currentItemId },
         data: { isEquipped: false },
       });
-      debugLog.push(`✅ Current item in slot "${slot}" unequipped.`);
+      debugLog.push(`✅ Unequipped current item in slot "${slot}".`);
     }
 
-    // สวมใส่ไอเทมใหม่
-    debugLog.push(`🔄 Equipping new item with ID: ${itemId}`);
+    debugLog.push(`🔄 กำลังสวมใส่ไอเทมใหม่ในช่อง: ${slot}`);
     await prisma.inventory.update({
       where: { id: itemId },
       data: { isEquipped: true },
     });
 
-    // อัปเดตฟิลด์ใน User
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: { [slot]: itemId },
     });
-    debugLog.push(`✅ New item equipped in slot "${slot}".`);
 
+    debugLog.push(`✅ ไอเทมใหม่สวมใส่ในช่อง "${slot}" เรียบร้อยแล้ว.`);
     return NextResponse.json({ user: updatedUser, debugLog });
   } catch (error) {
     debugLog.push(`❌ Error: ${error.message}`);

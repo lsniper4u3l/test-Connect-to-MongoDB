@@ -71,26 +71,24 @@ export function useEquipment(userId, setDebugLog) {
   // ฟังก์ชันสำหรับสวมใส่อุปกรณ์
   const handleEquip = async (itemId, slot) => {
     try {
-      if (
-        !['weaponL', 'weaponR', 'helmet', 'armor', 'pants', 'boots', 'character'].includes(slot)
-      ) {
+      if (!['weaponL', 'weaponR', 'helmet', 'armor', 'pants', 'boots', 'character'].includes(slot)) {
         setDebugLog((prev) => [...prev, `❌ Invalid slot: ${slot}`]);
         return;
       }
-
-      setDebugLog((prev) => [...prev, `🛠️ กำลังสวมใส่ไอเทม: ${slot}`]);
-
+  
+      setDebugLog((prev) => [...prev, `🛠️ กำลังสวมใส่ไอเทมในช่อง: ${slot}`]);
+  
       const response = await fetch('/api/equip', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, itemId, slot }),
       });
-
+  
       const data = await response.json();
       if (data.error) {
-        setDebugLog((prev) => [...prev, `❌ Error: ${data.error}`]);
+        setDebugLog((prev) => [...prev, ...data.debugLog, `❌ Error: ${data.error}`]);
       } else {
-        setDebugLog((prev) => [...prev, `✅ สวมใส่สำเร็จใน ${slot}`]);
+        setDebugLog((prev) => [...prev, ...data.debugLog, `✅ สวมใส่สำเร็จใน ${slot}`]);
         setEquipment((prev) => ({
           ...prev,
           [slot]: inventory.find((item) => item.id === itemId),
@@ -102,12 +100,10 @@ export function useEquipment(userId, setDebugLog) {
         );
       }
     } catch (error) {
-      setDebugLog((prev) => [
-        ...prev,
-        `❌ Error equipping item: ${error.message}`,
-      ]);
+      setDebugLog((prev) => [...prev, `❌ Error equipping item: ${error.message}`]);
     }
   };
+  
 
   return {
     equipment,
