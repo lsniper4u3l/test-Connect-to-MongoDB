@@ -18,6 +18,13 @@ model User {
   updatedAt  DateTime   @updatedAt
 
   items     Inventory[]
+
+  leftHand  String?     @db.ObjectId 
+  rightHand String?     @db.ObjectId
+  head      String?     @db.ObjectId
+  body      String?     @db.ObjectId
+  legs      String?     @db.ObjectId
+  feet      String?     @db.ObjectId
 }
 
 model Inventory {
@@ -31,4 +38,6 @@ model Inventory {
   userId    String   @db.ObjectId
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
+
+  isEquipped Boolean  @default(false)
 }

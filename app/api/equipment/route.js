@@ -11,16 +11,25 @@ async function POST(req) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { items: true },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     const equipment = {
-      leftHand: await prisma.inventory.findFirst({ where: { userId, category: 'weaponL' } }),
-      rightHand: await prisma.inventory.findFirst({ where: { userId, category: 'weaponR' } }),
-      head: await prisma.inventory.findFirst({ where: { userId, category: 'helmet' } }),
-      body: await prisma.inventory.findFirst({ where: { userId, category: 'armor' } }),
-      legs: await prisma.inventory.findFirst({ where: { userId, category: 'pants' } }),
-      feet: await prisma.inventory.findFirst({ where: { userId, category: 'boots' } }),
+      leftHand: user.leftHand ? await prisma.inventory.findUnique({ where: { id: user.leftHand } }) : null,
+      rightHand: user.rightHand ? await prisma.inventory.findUnique({ where: { id: user.rightHand } }) : null,
+      head: user.head ? await prisma.inventory.findUnique({ where: { id: user.head } }) : null,
+      body: user.body ? await prisma.inventory.findUnique({ where: { id: user.body } }) : null,
+      legs: user.legs ? await prisma.inventory.findUnique({ where: { id: user.legs } }) : null,
+      feet: user.feet ? await prisma.inventory.findUnique({ where: { id: user.feet } }) : null,
     };
 
-    return NextResponse.json(equipment);
+    return NextResponse.json({ equipment });
   } catch (error) {
     console.error('Error fetching equipment:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

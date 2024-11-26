@@ -1,94 +1,103 @@
+// app/character/page.js
+
 'use client';
 
 import { useTelegramAuth } from '@/hooks/useTelegramAuth';
-import { useEffect, useState } from 'react';
+import { useEquipment } from '@/hooks/useEquipment';
+import Loading from '@/Components/Loading';
+import ErrorMessage from '@/Components/ErrorMessage';
 
 export default function Character() {
   const { user, error } = useTelegramAuth();
-  const [equipment, setEquipment] = useState(null);
+  const {
+    equipment,
+    inventory,
+    filterInventory,
+    selectedCategory,
+    handleEquip,
+  } = useEquipment(user?.id);
 
-  useEffect(() => {
-    const fetchEquipment = async () => {
-      if (!user?.telegramId) return;
+  if (error) {
+    return <ErrorMessage error={error} />;
+  }
 
-      try {
-        const response = await fetch('/api/equipment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user.id }),
-        });
-
-        const data = await response.json();
-        if (!data.error) setEquipment(data);
-      } catch (err) {
-        console.error('Error fetching equipment:', err);
-      }
-    };
-
-    fetchEquipment();
-  }, [user?.telegramId]);
-
-  if (error) return <div className="container mx-auto p-4 text-red-500">{error}</div>;
-  if (!user) return <div className="container mx-auto p-4">Loading...</div>;
+  if (!user) return <Loading />;
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6 text-center">ตัวละครของคุณ</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {equipment ? (
-          <>
-            <div className="text-center">
-              <h2 className="text-lg font-semibold">มือซ้าย</h2>
-              {equipment.leftHand ? (
-                <img src={equipment.leftHand.image} alt="มือซ้าย" className="mx-auto w-16 h-16" />
+      <h1 className="text-2xl font-bold text-center mb-6">ตัวละครของคุณ</h1>
+
+      {/* อุปกรณ์ที่สวมใส่ */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        {equipment &&
+          Object.keys(equipment).map((slot) => (
+            <div key={slot} className="text-center">
+              <h2 className="text-lg font-semibold capitalize">{slot}</h2>
+              {equipment[slot] ? (
+                <img
+                  src={equipment[slot].image}
+                  alt={equipment[slot].name}
+                  className="w-20 h-20 mx-auto"
+                />
               ) : (
                 <p>ไม่มี</p>
               )}
             </div>
-            <div className="text-center">
-              <h2 className="text-lg font-semibold">มือขวา</h2>
-              {equipment.rightHand ? (
-                <img src={equipment.rightHand.image} alt="มือขวา" className="mx-auto w-16 h-16" />
-              ) : (
-                <p>ไม่มี</p>
-              )}
-            </div>
-            <div className="text-center">
-              <h2 className="text-lg font-semibold">หัว</h2>
-              {equipment.head ? (
-                <img src={equipment.head.image} alt="หัว" className="mx-auto w-16 h-16" />
-              ) : (
-                <p>ไม่มี</p>
-              )}
-            </div>
-            <div className="text-center">
-              <h2 className="text-lg font-semibold">ลำตัว</h2>
-              {equipment.body ? (
-                <img src={equipment.body.image} alt="ลำตัว" className="mx-auto w-16 h-16" />
-              ) : (
-                <p>ไม่มี</p>
-              )}
-            </div>
-            <div className="text-center">
-              <h2 className="text-lg font-semibold">กางเกง</h2>
-              {equipment.legs ? (
-                <img src={equipment.legs.image} alt="กางเกง" className="mx-auto w-16 h-16" />
-              ) : (
-                <p>ไม่มี</p>
-              )}
-            </div>
-            <div className="text-center">
-              <h2 className="text-lg font-semibold">รองเท้า</h2>
-              {equipment.feet ? (
-                <img src={equipment.feet.image} alt="รองเท้า" className="mx-auto w-16 h-16" />
-              ) : (
-                <p>ไม่มี</p>
-              )}
-            </div>
-          </>
-        ) : (
-          <p>กำลังโหลดข้อมูล...</p>
+          ))}
+      </div>
+
+      {/* ฟิลเตอร์สำหรับ Inventory */}
+      <div className="flex justify-center mb-6">
+        <button
+          onClick={() => filterInventory('all')}
+          className={`px-4 py-2 rounded-lg ${
+            selectedCategory === 'all' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+          }`}
+        >
+          ทั้งหมด
+        </button>
+        {['weaponL', 'weaponR', 'helmet', 'armor', 'pants', 'boots'].map(
+          (category) => (
+            <button
+              key={category}
+              onClick={() => filterInventory(category)}
+              className={`px-4 py-2 mx-2 rounded-lg ${
+                selectedCategory === category
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200'
+              }`}
+            >
+              {category}
+            </button>
+          )
         )}
+      </div>
+
+      {/* Inventory */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {inventory.map((item) => (
+          <div
+            key={item.id}
+            className="border p-4 rounded-lg shadow text-center"
+          >
+            <img
+              src={item.image}
+              alt={item.name}
+              className="w-16 h-16 mx-auto mb-2"
+            />
+            <p className="font-semibold">{item.name}</p>
+            <p className="text-sm text-gray-500">เกรด: {item.grade}</p>
+            <button
+              onClick={() => handleEquip(item.id, item.category)}
+              disabled={item.isEquipped}
+              className={`mt-2 px-4 py-2 rounded-lg text-white ${
+                item.isEquipped ? 'bg-gray-400' : 'bg-green-500 hover:bg-green-600'
+              }`}
+            >
+              {item.isEquipped ? 'กำลังสวมใส่' : 'สวมใส่'}
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   );

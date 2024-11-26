@@ -5,6 +5,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTelegramAuth } from '@/hooks/useTelegramAuth';
+import Loading from '@/Components/Loading';
+import ErrorMessage from '@/Components/ErrorMessage';
 import GachaButton from '@/Components/GachaButton';
 import Inventory from '@/Components/Inventory';
 import DebugLog from '@/Components/DebugLog';
@@ -72,8 +74,11 @@ export default function Gacha() {
     }
   };
 
-  if (error) return <div className="container mx-auto p-4 text-red-500">{error}</div>;
-  if (!user) return <div className="container mx-auto p-4">Loading...</div>;
+  if (error) {
+    return <ErrorMessage error={error} />;
+  }
+
+  if (!user) return <Loading />;
 
   return (
     <div className="container mx-auto p-4">
