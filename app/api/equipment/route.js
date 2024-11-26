@@ -1,3 +1,5 @@
+// app/api/equipment/route.js
+
 const { NextResponse } = require('next/server');
 const { prisma } = require('@/lib/prisma');
 

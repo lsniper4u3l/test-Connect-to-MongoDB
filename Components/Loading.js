@@ -1,3 +1,5 @@
+// Components/Loading.js
+
 import React from 'react';
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 
