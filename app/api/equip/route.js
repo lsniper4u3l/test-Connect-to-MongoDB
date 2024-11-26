@@ -11,7 +11,8 @@ async function POST(req) {
       return NextResponse.json({ error: 'User ID, Item ID, and Slot are required' }, { status: 400 });
     }
 
-    const validSlots = ['leftHand', 'rightHand', 'head', 'body', 'legs', 'feet'];
+    // ตรวจสอบว่า Slot นั้นถูกต้องหรือไม่
+    const validSlots = ['weaponL', 'weaponR', 'helmet', 'armor', 'pants', 'boots', 'character'];
     if (!validSlots.includes(slot)) {
       return NextResponse.json({ error: 'Invalid slot' }, { status: 400 });
     }

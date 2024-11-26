@@ -118,22 +118,18 @@ export default function Character() {
               <p className="font-semibold">{item.name}</p>
               <p className="text-sm text-gray-500">เกรด: {item.grade}</p>
               <button
-                onClick={() => {
-                  handleEquip(item.id, item.category);
-                  setDebugLog((prev) => [
-                    ...prev,
-                    `สวมใส่: ${item.name} ในช่อง ${item.category}`,
-                  ]);
-                }}
-                disabled={item.isEquipped}
-                className={`mt-2 px-4 py-2 rounded-lg text-white ${
-                  item.isEquipped
-                    ? 'bg-gray-400'
-                    : 'bg-green-500 hover:bg-green-600'
-                }`}
-              >
-                {item.isEquipped ? 'กำลังสวมใส่' : 'สวมใส่'}
-              </button>
+                    onClick={() => {
+                        handleEquip(item.id, item.category);
+                        setDebugLog((prev) => [...prev, `สวมใส่: ${item.name} ในช่อง ${item.category}`]);
+                    }}
+                    disabled={item.isEquipped}
+                    className={`mt-2 px-4 py-2 rounded-lg text-white ${
+                        item.isEquipped ? 'bg-gray-400' : 'bg-green-500 hover:bg-green-600'
+                    }`}
+                    >
+                    {item.isEquipped ? 'กำลังสวมใส่' : 'สวมใส่'}
+                </button>
+
             </div>
           ))}
         </div>
