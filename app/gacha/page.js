@@ -32,7 +32,7 @@ export default function Gacha() {
 
         const data = await response.json();
 
-        if (data.error) {  // เช็ค eror 
+        if (data.error) {
           setDebugLog((prev) => [...prev, `Error fetching inventory: ${data.error}`]);
           return;
         }
@@ -82,23 +82,42 @@ export default function Gacha() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6 text-center">เกมกาชา</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">
+        🎲 เกมกาชา
+      </h1>
 
-      <GachaButton
-        categories={['weaponL', 'weaponR', 'helmet', 'armor', 'pants', 'boots', 'character']}
-        onClick={handleGacha}
-      />
+      <div className="mb-6">
+        <GachaButton
+          categories={['weaponL', 'weaponR', 'helmet', 'armor', 'pants', 'boots', 'character']}
+          onClick={handleGacha}
+        />
+      </div>
 
-      <GachaResult result={result} />
+      {/* แสดงผลลัพธ์การสุ่ม */}
+      <div className="mb-6">
+        <GachaResult result={result} />
+      </div>
 
-      <Inventory items={inventory} />
+      {/* แสดงช่องเก็บของ */}
+      <div className="mb-6">
+        <h2 className="text-xl font-bold text-gray-700 text-center mb-4">
+          🧳 ช่องเก็บของ
+        </h2>
+        <Inventory items={inventory} />
+      </div>
 
-      <DebugLog logs={debugLog} />
+      {/* Debug Log */}
+      <div className="mb-6">
+        <h2 className="text-xl font-bold text-gray-700 text-center mb-4">
+          🔍 Debug Log
+        </h2>
+        <DebugLog logs={debugLog} />
+      </div>
 
       <div className="mt-8 text-center">
         <Link href="/">
-          <a className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded">
-            ย้อนกลับไปหน้าหลัก
+          <a className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded shadow-md transform hover:scale-105 transition-all duration-200">
+            🏠 ย้อนกลับไปหน้าหลัก
           </a>
         </Link>
       </div>
