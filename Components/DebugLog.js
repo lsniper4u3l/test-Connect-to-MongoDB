@@ -1,3 +1,5 @@
+// Components/DebugLog.js
+
 import React from 'react';
 
 export default function DebugLog({ logs }) {

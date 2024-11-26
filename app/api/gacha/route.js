@@ -63,12 +63,12 @@ async function POST(req) {
 
 function getRandomGrade() {
   const random = Math.random() * 100;
-  if (random <= 0.0001) return 'S';
-  if (random <= 0.0099) return 'A';
-  if (random <= 0.0900) return 'B';
-  if (random <= 0.9000) return 'C';
-  if (random <= 4.0000) return 'D';
-  if (random <= 25.0000) return 'E';
+  if (random <= 0.00010) return 'S';
+  if (random <= 0.00100) return 'A';
+  if (random <= 0.10000) return 'B';
+  if (random <= 1.00000) return 'C';
+  if (random <= 5.00000) return 'D';
+  if (random <= 30.00000) return 'E';
   return 'F';
 }
 

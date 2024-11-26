@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "@prisma/client": "^5.19.1",
     "@twa-dev/types": "^7.10.0",
     "mongodb": "^6.9.0",

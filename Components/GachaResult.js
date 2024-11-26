@@ -1,3 +1,5 @@
+// Components/GachaResult.js
+
 import React from 'react';
 
 export default function GachaResult({ result }) {

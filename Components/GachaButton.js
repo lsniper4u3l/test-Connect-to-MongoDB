@@ -1,3 +1,5 @@
+// Components/GachaButton.js
+
 import React from 'react';
 
 export default function GachaButton({ categories, onClick }) {
