@@ -7,7 +7,8 @@ import { useEquipment } from '@/hooks/useEquipment';
 import Loading from '@/Components/Loading';
 import ErrorMessage from '@/Components/ErrorMessage';
 import DebugLog from '@/Components/DebugLog';
-import { useEffect , useState } from 'react';
+import Link from 'next/link'; // Import Link สำหรับปุ่มกลับหน้าแรก
+import { useEffect, useState } from 'react';
 
 export default function Character() {
   const { user, error } = useTelegramAuth();
@@ -139,11 +140,20 @@ export default function Character() {
       </div>
 
       {/* Debug Log */}
-      <div className="bg-white shadow-md rounded-lg p-6">
+      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
         <h2 className="text-xl font-bold text-gray-700 text-center mb-4">
           🔍 Debug Log
         </h2>
         <DebugLog logs={debugLog} />
+      </div>
+
+      {/* ปุ่มกลับหน้าแรก */}
+      <div className="text-center mt-8">
+        <Link href="/">
+          <a className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded shadow-md transform hover:scale-105 transition-all duration-200">
+            🏠 กลับหน้าแรก
+          </a>
+        </Link>
       </div>
     </div>
   );
