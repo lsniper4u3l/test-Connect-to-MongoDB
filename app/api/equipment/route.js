@@ -1,38 +1,51 @@
-// app/api/equipment/route.js
-
 const { NextResponse } = require('next/server');
 const { prisma } = require('@/lib/prisma');
 
+const validSlots = [
+  'weaponL',
+  'weaponR',
+  'helmet',
+  'armor',
+  'pants',
+  'boots',
+  'character',
+];
+
 async function POST(req) {
+  const debugLog = []; // เก็บ Debug Log
   try {
     const { userId } = await req.json();
+    debugLog.push(`🟢 รับค่าจาก Client: userId=${userId}`);
 
     if (!userId) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+      debugLog.push('❌ Missing User ID.');
+      return NextResponse.json({ error: 'User ID is required', debugLog }, { status: 400 });
     }
 
+    debugLog.push('🔍 ตรวจสอบ User...');
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: { items: true },
     });
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      debugLog.push('❌ User not found.');
+      return NextResponse.json({ error: 'User not found', debugLog }, { status: 404 });
+    }
+    debugLog.push('✅ User found.');
+
+    // ดึงข้อมูลอุปกรณ์แต่ละ slot
+    const equipment = {};
+    for (const slot of validSlots) {
+      equipment[slot] = user[slot]
+        ? await prisma.inventory.findUnique({ where: { id: user[slot] } })
+        : null;
     }
 
-    const equipment = {
-      leftHand: user.leftHand ? await prisma.inventory.findUnique({ where: { id: user.leftHand } }) : null,
-      rightHand: user.rightHand ? await prisma.inventory.findUnique({ where: { id: user.rightHand } }) : null,
-      head: user.head ? await prisma.inventory.findUnique({ where: { id: user.head } }) : null,
-      body: user.body ? await prisma.inventory.findUnique({ where: { id: user.body } }) : null,
-      legs: user.legs ? await prisma.inventory.findUnique({ where: { id: user.legs } }) : null,
-      feet: user.feet ? await prisma.inventory.findUnique({ where: { id: user.feet } }) : null,
-    };
-
-    return NextResponse.json({ equipment });
+    debugLog.push('✅ Equipment fetched successfully.');
+    return NextResponse.json({ equipment, debugLog });
   } catch (error) {
-    console.error('Error fetching equipment:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    debugLog.push(`❌ Error: ${error.message}`);
+    return NextResponse.json({ error: 'Internal server error', debugLog }, { status: 500 });
   }
 }
 
