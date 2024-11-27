@@ -39,26 +39,30 @@ export default function Character() {
           🛡️ อุปกรณ์ที่สวมใส่
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-  {equipment &&
-    Object.keys(equipment).map((slot) => (
-      <div key={slot} className="text-center border p-4 rounded-lg shadow bg-gray-100">
-        <h3 className="text-md font-semibold capitalize mb-2">{slot}</h3>
-        {equipment[slot] ? (
-          <img
-            src={equipment[slot].image}
-            alt={equipment[slot].name}
-            className="w-16 h-16 mx-auto mb-2"
-          />
-        ) : (
-          <div className="w-16 h-16 mx-auto mb-2 bg-gray-300 rounded"></div>
-        )}
-        <p className="text-sm text-gray-500">
-          {equipment[slot] ? equipment[slot].name : 'ไม่มี'}
-        </p>
-      </div>
-    ))}
-</div>
-
+          {equipment &&
+            Object.keys(equipment).map((slot) => (
+              <div
+                key={slot}
+                className="text-center border p-4 rounded-lg shadow bg-gray-100"
+              >
+                <h3 className="text-md font-semibold capitalize mb-2">
+                  {slot}
+                </h3>
+                {equipment[slot] ? (
+                  <img
+                    src={equipment[slot].image}
+                    alt={equipment[slot].name}
+                    className="w-16 h-16 mx-auto mb-2"
+                  />
+                ) : (
+                  <div className="w-16 h-16 mx-auto mb-2 bg-gray-300 rounded"></div>
+                )}
+                <p className="text-sm text-gray-500">
+                  {equipment[slot] ? equipment[slot].name : 'ไม่มี'}
+                </p>
+              </div>
+            ))}
+        </div>
       </div>
 
       {/* ฟิลเตอร์สำหรับ Inventory */}
@@ -104,7 +108,11 @@ export default function Character() {
           {inventory.map((item) => (
             <div
               key={item.id}
-              className="border p-4 rounded-lg shadow text-center bg-gray-50"
+              className={`border p-4 rounded-lg shadow text-center ${
+                item.isEquipped
+                  ? 'bg-green-100 border-green-500' // ไฮไลท์กรอบเมื่อสวมใส่
+                  : 'bg-gray-50'
+              }`}
             >
               <img
                 src={item.image}
@@ -114,18 +122,29 @@ export default function Character() {
               <p className="font-semibold">{item.name}</p>
               <p className="text-sm text-gray-500">เกรด: {item.grade}</p>
               <button
-                    onClick={() => {
-                        handleEquip(item.id, item.category);
-                        setDebugLog((prev) => [...prev, `สวมใส่: ${item.name} ในช่อง ${item.category}`]);
-                    }}
-                    disabled={item.isEquipped}
-                    className={`mt-2 px-4 py-2 rounded-lg text-white ${
-                        item.isEquipped ? 'bg-gray-400' : 'bg-green-500 hover:bg-green-600'
-                    }`}
-                    >
-                    {item.isEquipped ? 'กำลังสวมใส่' : 'สวมใส่'}
-                </button>
-
+                onClick={() => {
+                  if (item.isEquipped) {
+                    handleEquip(null, item.category); // ถอดอุปกรณ์
+                    setDebugLog((prev) => [
+                      ...prev,
+                      `ถอด: ${item.name} ออกจาก ${item.category}`,
+                    ]);
+                  } else {
+                    handleEquip(item.id, item.category); // สวมใส่
+                    setDebugLog((prev) => [
+                      ...prev,
+                      `สวมใส่: ${item.name} ในช่อง ${item.category}`,
+                    ]);
+                  }
+                }}
+                className={`mt-2 px-4 py-2 rounded-lg text-white ${
+                  item.isEquipped
+                    ? 'bg-red-500 hover:bg-red-600' // ปุ่มถอดเมื่อสวมใส่อยู่
+                    : 'bg-green-500 hover:bg-green-600' // ปุ่มสวมใส่
+                }`}
+              >
+                {item.isEquipped ? 'ถอดออก' : 'สวมใส่'}
+              </button>
             </div>
           ))}
         </div>
