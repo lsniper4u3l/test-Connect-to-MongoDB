@@ -2,23 +2,20 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useTelegramAuth } from '@/hooks/useTelegramAuth';
-import Loading from '@/Components/Loading';
-import ErrorMessage from '@/Components/ErrorMessage';
-import GachaButton from '@/Components/GachaButton';
-import Inventory from '@/Components/Inventory';
-import DebugLog from '@/Components/DebugLog';
-import GachaResult from '@/Components/GachaResult';
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import NavBar from "@/components/NavBar";
+import ItemFilter from "@/components/market/ItemFilter"; // Import ItemFilter
+import { useTelegramAuth } from "@/hooks/useTelegramAuth"; // ใช้ Telegram Auth
 
-export default function Gacha() {
-  const [result, setResult] = useState(null); // ไอเทมที่สุ่มได้
-  const [inventory, setInventory] = useState([]); // ช่องเก็บของ
-  const [debugLog, setDebugLog] = useState([]); // Debug Log
-  const { user, error } = useTelegramAuth();
+export default function Inventory() {
+  const { user, error } = useTelegramAuth(); // รับข้อมูลผู้ใช้จาก Telegram
+  const [inventory, setInventory] = useState([]); // เก็บข้อมูล inventory
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedGrade, setSelectedGrade] = useState("all");
+  const [debugLog, setDebugLog] = useState([]); // สำหรับเก็บ Debug Log
 
-  // ดึงข้อมูล inventory ของผู้ใช้
+  // ดึงข้อมูล inventory จาก API
   useEffect(() => {
     const fetchInventory = async () => {
       try {
@@ -27,7 +24,7 @@ export default function Gacha() {
         const response = await fetch('/api/inventory', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userIdInv: user.id }), // ส่ง userId ผ่าน body
+          body: JSON.stringify({ userIdInv: user.telegramId }), // ส่ง userId ผ่าน body
         });
 
         const data = await response.json();
@@ -47,79 +44,76 @@ export default function Gacha() {
     fetchInventory();
   }, [user?.telegramId]);
 
-  // ฟังก์ชันสำหรับสุ่มไอเทม
-  const handleGacha = async (category) => {
-    try {
-      setDebugLog((prev) => [...prev, `เริ่มสุ่มไอเทมประเภท: ${category}`]);
-
-      const response = await fetch('/api/gacha', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: user.telegramId, category }),
-      });
-
-      const responseData = await response.json();
-
-      if (responseData.error) {
-        setDebugLog((prev) => [...prev, ...responseData.debugLog]);
-        return;
-      }
-
-      const newItem = responseData.item;
-      setDebugLog((prev) => [...prev, ...responseData.debugLog]);
-      setInventory((prev) => [...prev, newItem]); // เพิ่มไอเทมเข้าสู่ช่องเก็บของ
-      setResult(newItem); // แสดงไอเทมที่สุ่มได้
-    } catch (error) {
-      setDebugLog((prev) => [...prev, `เกิดข้อผิดพลาดในการเชื่อมต่อ: ${error.message}`]);
-    }
-  };
-
-  if (error) {
-    return <ErrorMessage error={error} />;
-  }
-
-  if (!user) return <Loading />;
+  // ฟิลเตอร์ไอเทมตาม Category และ Grade
+  const filteredItems = inventory.filter((item) => {
+    const categoryMatch = selectedCategory === "all" || item.category === selectedCategory;
+    const gradeMatch = selectedGrade === "all" || item.grade === selectedGrade;
+    return categoryMatch && gradeMatch;
+  });
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">
-        🎲 เกมกาชา
-      </h1>
+    <div className="min-h-screen ">
+      <NavBar />
+      <div className="text-white flex justify-center items-center">
+        <div className="w-11/12 bg-gray-800 bg-opacity-80 p-2 md:p-3">
+          <h1 className="text-2xl md:text-3xl font-bold text-center mb-2 md:mb-4">
+            Inventory
+          </h1>
 
-      <div className="mb-6">
-        <GachaButton
-          categories={['weaponL', 'weaponR', 'helmet', 'armor', 'pants', 'boots', 'character']}
-          onClick={handleGacha}
-        />
-      </div>
+          {/* ใช้ ItemFilter สำหรับฟิลเตอร์ */}
+          <ItemFilter
+            category={selectedCategory}
+            setCategory={setSelectedCategory}
+            grade={selectedGrade}
+            setGrade={setSelectedGrade}
+          />
 
-      {/* แสดงผลลัพธ์การสุ่ม */}
-      <div className="mb-6">
-        <GachaResult result={result} />
-      </div>
-
-      {/* แสดงช่องเก็บของ */}
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-700 text-center mb-4">
-          🧳 ช่องเก็บของ
-        </h2>
-        <Inventory items={inventory} />
+          {/* Display items */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-4">
+            {filteredItems.map((item) => (
+              <div
+                key={item.id}
+                className="bg-gray-800 rounded-lg shadow-md p-2 md:p-4 flex flex-col items-center text-center transform transition-transform duration-300 hover:scale-105 hover:bg-gray-700"
+              >
+                <div className="relative w-20 h-20 mb-4 mt-2 flex justify-center items-center">
+                  <Image
+                    src={item.image}
+                    alt={item.name}
+                    width={75}
+                    height={75}
+                    className="rounded-lg bg-white p-1"
+                  />
+                </div>
+                <h2 className="text-sm md:text-lg font-bold text-yellow-400 mb-1">
+                  {item.name}
+                </h2>
+                <p className="text-xs md:text-sm text-gray-400 capitalize">
+                  {item.category}
+                </p>
+                {item.power && (
+                  <p className="text-xs md:text-sm text-red-500 font-semibold mt-1">
+                    Power: {item.power}⚡
+                  </p>
+                )}
+                <p className="text-xs md:text-sm text-yellow-300 font-semibold mb-1 md:mb-2">
+                  Grade: {item.grade}
+                </p>
+              </div>
+            ))}
+            {filteredItems.length === 0 && (
+              <p className="text-center col-span-full text-gray-500">
+                No items found in this category.
+              </p>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Debug Log */}
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-700 text-center mb-4">
-          🔍 Debug Log
-        </h2>
-        <DebugLog logs={debugLog} />
-      </div>
-
-      <div className="mt-8 text-center">
-        <Link href="/">
-          <a className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded shadow-md transform hover:scale-105 transition-all duration-200">
-            🏠 ย้อนกลับไปหน้าหลัก
-          </a>
-        </Link>
+      <div className="text-xs text-gray-300 mt-4 p-2">
+        {debugLog.map((log, index) => (
+          <p key={index}>{log}</p>
+        ))}
       </div>
     </div>
   );
