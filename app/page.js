@@ -4,7 +4,7 @@
 
 import { useTelegramAuth } from '@/hooks/useTelegramAuth';
 import LanguageSwitcher from '@/Components/LanguageSwitcher';
-import LoadingPage from '@/Components/LoadingPage';
+import Loading from '@/Components/Loading';
 import ErrorMessage from '@/Components/ErrorMessage';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { translations } from "@/locales";
@@ -19,7 +19,7 @@ export default function Home() {
     return <ErrorMessage error={error} />;
   }
 
-  if (!user) return <LoadingPage />;
+  if (!user) return <Loading />;
 
   return (
     <div className="container mx-auto p-4">
